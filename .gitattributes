@@ -1,0 +1,4 @@
+# เก็บทุกไฟล์ข้อความใน repo เป็น LF เพื่อให้ตรงกับ CI (Linux) และไม่เกิด diff ปลอมจาก CRLF ของ Windows
+* text=auto eol=lf
+*.png binary
+*.ico binary
