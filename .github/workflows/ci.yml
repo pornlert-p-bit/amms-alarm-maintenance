@@ -1,0 +1,44 @@
+# CI ของ AMMS — รันอัตโนมัติทุกครั้งที่ push ขึ้น GitHub (ทุก branch)
+# ลำดับตามโจทย์ข้อ 3.10: Install Dependencies → Build → Lint → Test
+# ถ้าขั้นใดพัง ขั้นถัดไปจะไม่รัน และ GitHub จะแสดงสถานะ ❌ Failed ที่ commit นั้น
+
+name: CI
+
+on:
+  push:
+  workflow_dispatch: # ปุ่มกดรันเองจากหน้า Actions ได้
+
+jobs:
+  ci:
+    name: Install → Build → Lint → Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # ค่า public ปลอมสำหรับ build เท่านั้น (ไม่ใช่ความลับ และไม่ได้ต่อฐานข้อมูลจริง)
+    # ระบบบน Vercel ใช้ค่าจริงที่ตั้งไว้ใน Vercel → Settings → Environment Variables
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-not-a-secret
+      NEXT_TELEMETRY_DISABLED: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci # ติดตั้งตาม package-lock.json เป๊ะ ๆ ถ้า lock ไม่ตรงกับ package.json จะพังทันที
+
+      - name: Build
+        run: npm run build # รวมการตรวจ TypeScript ด้วย
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
