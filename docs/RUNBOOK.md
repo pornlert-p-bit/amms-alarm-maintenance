@@ -34,6 +34,10 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `app/globals.css` | ชุดสี (token) และฟอนต์ของธีม Station terminal — แก้สีทั้งระบบที่นี่ที่เดียว |
 | `components/station/` | ชิ้นส่วนหน้าจอ: `group-box` (กรอบมีหัวข้อ), `status-pill` (ป้ายสถานะ), `shift-clock` (กะ + นาฬิกา), `top-nav` (เมนูบน), `page-title` |
 | `lib/shift.ts` | คำนวณกะเช้า/บ่าย/ดึกจากชั่วโมง (มี unit test) |
+| `features/machine/` | Module เครื่องจักร: `schema.ts` (กฎตรวจข้อมูล), `rules.ts` (กฎธุรกิจ), `queries.ts` (อ่าน), `actions.ts` (เพิ่ม/แก้/ลบ), `components/` (ฟอร์ม, ปุ่มลบ) |
+| `features/audit/write.ts` | จุดเดียวที่เขียน Audit Log (ADR-005) |
+| `lib/action-result.ts` | รูปแบบผลลัพธ์ของ Server Action + แปลง error ฐานข้อมูลเป็นข้อความไทย |
+| `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
 | `app/(auth)/login/` | หน้า Login |
 | `app/(app)/` | หน้าหลักทั้งหมดที่ต้อง Login (dashboard, machines, alarms, maintenance, users) |
 | `app/forbidden/` | หน้าแจ้ง "ไม่มีสิทธิ์" |
@@ -122,6 +126,9 @@ npm run dev     # เปิด http://localhost:3000
 | Technician เปิด `/users` แล้วเจอ "ไม่มีสิทธิ์" | — | **ถูกต้องแล้ว** หน้านี้สำหรับ Admin เท่านั้น |
 | CI ขึ้น ❌ ที่ขั้น **Install dependencies** | GitHub → Actions → คลิก run ที่แดง | มักเกิดจาก `package-lock.json` ไม่ตรงกับ `package.json` → รัน `npm install` ในเครื่องแล้ว commit ไฟล์ lock ใหม่ (**อย่าแก้ด้วย `--legacy-peer-deps`**) |
 | CI ขึ้น ❌ ที่ขั้น **Build** แต่ในเครื่องผ่าน | log ของ Actions | มักเป็น error ของ TypeScript → รัน `npm run build` ในเครื่องแล้วอ่าน error |
+| เพิ่มเครื่องแล้วขึ้น **"รหัสเครื่องจักรนี้มีอยู่แล้ว"** แต่ไม่เห็นในรายการ | SQL Editor: `select machine_id, deleted_at from machines where machine_id = 'M-XXX';` | เครื่องนั้นเคยถูกลบ (Soft Delete) รหัสจึงยังถูกจองอยู่ — ถ้าต้องการกู้เครื่องคืน: `update machines set deleted_at = null where machine_id = 'M-XXX';` |
+| ใน log ของ Vercel มี **`writeAudit failed`** | ดู action / entity ในบรรทัดนั้น | ข้อมูลถูกบันทึกแล้วแต่ไม่มี Audit Log (ข้อจำกัดใน ADR-005 Revision) — บันทึกเหตุการณ์ไว้ และตรวจว่า RLS ของ `audit_logs` ยังถูกต้อง |
+| เวลาที่แสดงในหน้าเว็บ**ช้าไป 7 ชั่วโมง** | โค้ดที่แสดงเวลาจุดนั้น | ต้องแสดงผ่าน `formatDateTime()` ใน `lib/format.ts` เท่านั้น |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -200,3 +207,4 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | 26 ก.ย. 2569 | สร้างคู่มือ: โครงสร้างระบบ, Login/Role, การตั้งค่าครั้งแรก, CI, Deploy |
 | 26 ก.ย. 2569 | เปลี่ยนหน้าจอเป็นธีม Station terminal (ADR-007): เพิ่มไฟล์ธีม, ชิ้นส่วน `components/station/`, กะ + นาฬิกา |
 | 26 ก.ย. 2569 | ตั้ง Supabase project จริง (Singapore), เพิ่มข้อ 4.2 วิธีตรวจความปลอดภัยฐานข้อมูล, ผลทดสอบ RLS 23/23 ผ่าน |
+| 26 ก.ย. 2569 | เพิ่ม Module เครื่องจักร (เพิ่ม/แก้/ลบแบบ Soft Delete/ค้นหา), Audit Log, วิธีกู้เครื่องที่ถูกลบ |
