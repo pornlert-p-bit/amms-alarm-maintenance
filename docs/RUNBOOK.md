@@ -38,6 +38,9 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `features/audit/write.ts` | จุดเดียวที่เขียน Audit Log (ADR-005) |
 | `lib/action-result.ts` | รูปแบบผลลัพธ์ของ Server Action + แปลง error ฐานข้อมูลเป็นข้อความไทย |
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
+| `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
+| `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
+| `supabase/migrations/` | ไฟล์แก้ฐานข้อมูลที่ต้องรันตามลำดับกับ project ที่ใช้งานอยู่แล้ว (ดูข้อ 2.6) |
 | `app/(auth)/login/` | หน้า Login |
 | `app/(app)/` | หน้าหลักทั้งหมดที่ต้อง Login (dashboard, machines, alarms, maintenance, users) |
 | `app/forbidden/` | หน้าแจ้ง "ไม่มีสิทธิ์" |
@@ -96,6 +99,18 @@ npm run dev     # เปิด http://localhost:3000
 2. **Environment Variables** ใส่ 2 ค่าตามตาราง 2.3 (เลือกทั้ง Production และ Preview)
 3. **Deploy** — หลังจากนี้ทุกครั้งที่ push เข้า `main` Vercel จะ deploy ใหม่ให้อัตโนมัติ
 
+### 2.6 อัปเดตฐานข้อมูล (Migration)
+- **ติดตั้งใหม่:** รัน `supabase/schema.sql` ไฟล์เดียวพอ (รวมทุก migration ไว้แล้ว)
+- **Project ที่ใช้งานอยู่แล้ว:** รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรัน **ตามลำดับเลข** ใน SQL Editor
+
+| ไฟล์ | ทำอะไร | รันใน project `amms` แล้ว |
+|---|---|---|
+| `002_staff_directory.sql` | view รายชื่อ (id, ชื่อ, role) ให้ทุกคนที่ Login เห็นชื่อเพื่อนร่วมงาน | ✅ 26 ก.ย. 2569 |
+| `003_alarm_integrity.sql` | trigger บังคับลำดับสถานะ Alarm และผู้ปิดจาก token (ตอนแก้ไข) | ✅ 26 ก.ย. 2569 |
+| `004_alarm_insert_integrity.sql` | trigger บังคับ Alarm ใหม่เริ่มที่ Open และผู้บันทึกจาก token (ตอนสร้าง) | ✅ 26 ก.ย. 2569 |
+
+กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
+
 ---
 
 ## 3. ค่า Config สำคัญอยู่ที่ไหน
@@ -129,6 +144,9 @@ npm run dev     # เปิด http://localhost:3000
 | เพิ่มเครื่องแล้วขึ้น **"รหัสเครื่องจักรนี้มีอยู่แล้ว"** แต่ไม่เห็นในรายการ | SQL Editor: `select machine_id, deleted_at from machines where machine_id = 'M-XXX';` | เครื่องนั้นเคยถูกลบ (Soft Delete) รหัสจึงยังถูกจองอยู่ — ถ้าต้องการกู้เครื่องคืน: `update machines set deleted_at = null where machine_id = 'M-XXX';` |
 | ใน log ของ Vercel มี **`writeAudit failed`** | ดู action / entity ในบรรทัดนั้น | ข้อมูลถูกบันทึกแล้วแต่ไม่มี Audit Log (ข้อจำกัดใน ADR-005 Revision) — บันทึกเหตุการณ์ไว้ และตรวจว่า RLS ของ `audit_logs` ยังถูกต้อง |
 | เวลาที่แสดงในหน้าเว็บ**ช้าไป 7 ชั่วโมง** | โค้ดที่แสดงเวลาจุดนั้น | ต้องแสดงผ่าน `formatDateTime()` ใน `lib/format.ts` เท่านั้น |
+| ชื่อผู้บันทึก / ผู้ปิดใน Alarm แสดงเป็น **"—"** | SQL: `select count(*) from staff_directory;` | ถ้า error ว่าไม่มี view แปลว่ายังไม่รัน migration 002 |
+| ต้องการ**ลบ Alarm ที่บันทึกผิด** | — | ระบบตั้งใจไม่ให้ลบผ่านหน้าเว็บ/API (ประวัติต้องไม่หาย) — ถ้าจำเป็นจริง ผู้ดูแลลบใน SQL Editor: `delete from alarms where id = '<id>' returning *;` แล้วบันทึกเหตุผลไว้ |
+| แก้/ปิด Alarm แล้วขึ้น **"เปลี่ยนสถานะตามลำดับนี้ไม่ได้"** หรือ **"Alarm นี้ปิดแล้ว"** | — | **ทำงานถูกต้อง** — trigger ในฐานข้อมูลปฏิเสธ (migration 003) |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -196,6 +214,8 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | `proxy.ts`, `lib/supabase/proxy.ts` | จัดการ session / cookie | คัดลอก cookie ตอน redirect, matcher ไม่ข้ามหน้าที่ควรป้องกัน |
 | `lib/auth/actions.ts` | รับรหัสผ่าน | ไม่ log รหัสผ่าน, ข้อความ error ไม่บอกว่าอีเมลมีในระบบหรือไม่ |
 | `lib/auth/roles.ts` → `safeNextPath` | กัน Open Redirect | ปฏิเสธ URL ภายนอกทุกรูปแบบ |
+| `supabase/migrations/002_staff_directory.sql` | view ข้าม RLS ของ profiles โดยตั้งใจ | เลือกแค่ id, full_name, role / ไม่ให้ anon |
+| `supabase/migrations/003–004` | trigger คุมความถูกต้องของ Alarm | ครอบคลุมทั้ง INSERT และ UPDATE / ผู้บันทึก-ผู้ปิดมาจาก `auth.uid()` |
 | Environment Variables ใน Vercel | ความลับ | ไม่มี Secret key หลุดไปอยู่ในตัวแปรที่ขึ้นต้น `NEXT_PUBLIC_` |
 
 ---
@@ -208,3 +228,4 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | 26 ก.ย. 2569 | เปลี่ยนหน้าจอเป็นธีม Station terminal (ADR-007): เพิ่มไฟล์ธีม, ชิ้นส่วน `components/station/`, กะ + นาฬิกา |
 | 26 ก.ย. 2569 | ตั้ง Supabase project จริง (Singapore), เพิ่มข้อ 4.2 วิธีตรวจความปลอดภัยฐานข้อมูล, ผลทดสอบ RLS 23/23 ผ่าน |
 | 26 ก.ย. 2569 | เพิ่ม Module เครื่องจักร (เพิ่ม/แก้/ลบแบบ Soft Delete/ค้นหา), Audit Log, วิธีกู้เครื่องที่ถูกลบ |
+| 26 ก.ย. 2569 | เพิ่ม Module Alarm, migration 002–004, หัวข้อ 2.6 การรัน migration, รายการ review ของ trigger |
