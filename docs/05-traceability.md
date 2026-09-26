@@ -34,14 +34,14 @@
 | REQ-ALM-04 | 02 §5.2, 03 §5.2 | `alarms.closed_by`, `closed_at` | `closeAlarm` + trigger `trg_alarms_enforce_update` | TC-ALM-04 | ✅ ผ่าน (A8 + P3: ปลอมไม่ได้แม้ยิง API ตรง) |
 | REQ-ALM-05 | 02 §4 (BR-02) | — (`rules.ts`, เหตุผลใน ADR-003) | `rules.ts` + trigger `trg_alarms_enforce_update` (migration 003) | TC-ALM-05 | ✅ ผ่าน (A10 + P1, P2) |
 | REQ-ALM-06 | 04 §4 | RLS `alarms_select_authenticated` | `alarm/queries.ts` | TC-ALM-06 | ✅ ผ่าน |
-| REQ-MNT-01 | 02 §3.1 | `maintenance_records` | `features/maintenance/actions.ts` | TC-MNT-01 | รอ implement |
-| REQ-MNT-02 | 04 §2.1 | `maintenance_records.alarm_id` (nullable FK) | `maintenance/schema.ts` | TC-MNT-02 | รอ implement |
-| REQ-MNT-03 | 02 §4 | enum `mnt_status` (มี `Waiting Part`) | `maintenance/rules.ts` | TC-MNT-03 | รอ implement |
-| REQ-MNT-04 | 04 §3 (BR-04) | `mnt_done_requires_action` | `maintenance/actions.ts` | TC-MNT-04 | รอ implement |
-| REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` | TC-MNT-05 | รอ implement |
+| REQ-MNT-01 | 02 §3.1 | `maintenance_records` | `features/maintenance/actions.ts` → `createMaintenance` | TC-MNT-01 | ✅ ผ่าน (W1–W4) [รายงานงานซ่อม](test-reports/2026-09-26-maintenance.md) |
+| REQ-MNT-02 | 04 §2.1 | `maintenance_records.alarm_id` (nullable FK) | `maintenance/schema.ts` + trigger `enforce_maintenance_insert` | TC-MNT-02 | ✅ ผ่าน (W1 ผูก Alarm + I1 Alarm คนละเครื่องถูกปฏิเสธ) |
+| REQ-MNT-03 | 02 §4 | enum `mnt_status` (มี `Waiting Part`) | `maintenance/rules.ts` + trigger (migration 005) | TC-MNT-03 | ✅ ผ่าน (unit 16 กรณี + W5 + U5, U6, U11) |
+| REQ-MNT-04 | 04 §3 (BR-04) | `mnt_done_requires_action` | `maintenance/actions.ts` → `changeMaintenanceStatus` | TC-MNT-04 | ✅ ผ่าน (W7, W8 + U9) |
+| REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` + `authorizeAction(isStaff)` | TC-MNT-05 | 🟡 ฝั่ง API ผ่าน (I2, U7, D1) — ยังไม่ได้เปิดด้วยบัญชี viewer |
 | REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | ✅ ผ่าน (M8–M10) |
 | REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | ✅ ผ่าน (A11) |
-| REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` | TC-SRC-03 | รอ implement |
+| REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` → `getMaintenanceBoard` | TC-SRC-03 | ✅ ผ่าน (W11, W12) |
 | REQ-DSH-01 | 04 §6 | query `group by status` | `dashboard/queries.ts` | TC-DSH-01 | รอ implement |
 | REQ-DSH-02 | 04 §6 | `idx_machines_status` | `dashboard/queries.ts` | TC-DSH-02 | รอ implement |
 | REQ-DSH-03 | 04 §6 | `idx_alarms_open`, `idx_mnt_status` | `dashboard/queries.ts` | TC-DSH-03 | รอ implement |
@@ -73,7 +73,7 @@
 | REQ-BON-05 | ADR-005 | `audit_logs` + RLS admin only | `app/(app)/audit/page.tsx` | TC-BON-05 | 🟡 RLS ผ่าน (P7) — หน้าแสดงผลยังไม่ทำ |
 | REQ-BON-06 | 03 §3.2 | — | `ThemeToggle.tsx`, Tailwind breakpoints | TC-BON-06 | รอ implement |
 | REQ-BON-07 | 02 §4 | enum `mnt_status` = `Waiting Part` | `maintenance/rules.ts` | TC-BON-07 | รอ implement |
-| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | 🟡 ผ่านในหน้า Alarm (A11) — หน้างานซ่อมยังไม่ทำ |
+| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | ✅ ผ่าน (Alarm A11 + งานซ่อม W11) |
 | REQ-BON-09 | ADR-004 | `alarms.event_id`, `machines.last_seen_at`, `status_source` | `features/integration/*`, `api/plc/status` | TC-BON-09 | รอ implement |
 
 ## 3. Non-functional Requirements

@@ -39,6 +39,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `lib/action-result.ts` | รูปแบบผลลัพธ์ของ Server Action + แปลง error ฐานข้อมูลเป็นข้อความไทย |
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
+| `features/maintenance/` | Module งานซ่อมบำรุง: กฎลำดับสถานะ (`rules.ts`), อ่านข้อมูลบอร์ด (`queries.ts`), เปิด/เปลี่ยนสถานะ/แก้ใบงาน (`actions.ts`), `components/` (ฟอร์ม, การ์ดบนบอร์ด, ปุ่มสถานะ) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
 | `supabase/migrations/` | ไฟล์แก้ฐานข้อมูลที่ต้องรันตามลำดับกับ project ที่ใช้งานอยู่แล้ว (ดูข้อ 2.6) |
 | `app/(auth)/login/` | หน้า Login |
@@ -108,6 +109,7 @@ npm run dev     # เปิด http://localhost:3000
 | `002_staff_directory.sql` | view รายชื่อ (id, ชื่อ, role) ให้ทุกคนที่ Login เห็นชื่อเพื่อนร่วมงาน | ✅ 26 ก.ย. 2569 |
 | `003_alarm_integrity.sql` | trigger บังคับลำดับสถานะ Alarm และผู้ปิดจาก token (ตอนแก้ไข) | ✅ 26 ก.ย. 2569 |
 | `004_alarm_insert_integrity.sql` | trigger บังคับ Alarm ใหม่เริ่มที่ Open และผู้บันทึกจาก token (ตอนสร้าง) | ✅ 26 ก.ย. 2569 |
+| `005_maintenance_integrity.sql` | trigger คุมใบงานซ่อม (สถานะตามลำดับ, Done แก้ไม่ได้, Alarm ต้องเป็นของเครื่องเดียวกัน, ช่างต้องเป็น admin/technician) + ถอนสิทธิ์ลบ | ✅ 26 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
 
@@ -147,6 +149,10 @@ npm run dev     # เปิด http://localhost:3000
 | ชื่อผู้บันทึก / ผู้ปิดใน Alarm แสดงเป็น **"—"** | SQL: `select count(*) from staff_directory;` | ถ้า error ว่าไม่มี view แปลว่ายังไม่รัน migration 002 |
 | ต้องการ**ลบ Alarm ที่บันทึกผิด** | — | ระบบตั้งใจไม่ให้ลบผ่านหน้าเว็บ/API (ประวัติต้องไม่หาย) — ถ้าจำเป็นจริง ผู้ดูแลลบใน SQL Editor: `delete from alarms where id = '<id>' returning *;` แล้วบันทึกเหตุผลไว้ |
 | แก้/ปิด Alarm แล้วขึ้น **"เปลี่ยนสถานะตามลำดับนี้ไม่ได้"** หรือ **"Alarm นี้ปิดแล้ว"** | — | **ทำงานถูกต้อง** — trigger ในฐานข้อมูลปฏิเสธ (migration 003) |
+| เปิดใบงานซ่อมแล้วขึ้น **"Alarm ที่เลือกไม่ใช่ของเครื่องจักรนี้"** | — | **ทำงานถูกต้อง** — trigger (migration 005) ปฏิเสธ ให้เลือก Alarm ของเครื่องเดียวกัน หรือเว้นว่าง |
+| ใบงานซ่อมขึ้น **"ใบงานนี้เสร็จแล้ว แก้ไขไม่ได้"** หรือ **"ถูกเปลี่ยนสถานะไปแล้วโดยผู้อื่น"** | — | **ทำงานถูกต้อง** — ใบงานที่ Done ถูกล็อกเป็นประวัติ / มีคนกดเปลี่ยนก่อน ให้รีเฟรชหน้า |
+| ตัวเลือก "ช่างผู้รับผิดชอบ" **ว่าง** / หน้าเปิดใบงานขึ้น "โหลดรายชื่อช่างไม่ได้" | SQL: `select role, count(*) from staff_directory group by role;` | ยังไม่รัน migration 002 หรือไม่มีบัญชี role `technician`/`admin` |
+| ต้องการ**ลบใบงานซ่อมที่เปิดผิด** | — | เหมือน Alarm — ไม่มีสิทธิ์ลบผ่านเว็บ/API ผู้ดูแลลบใน SQL Editor: `delete from maintenance_records where id = '<id>' returning *;` |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -200,6 +206,14 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | เวอร์ชันใหม่บน Vercel มีปัญหา | Vercel → Deployments → เลือก deployment ก่อนหน้าที่ใช้ได้ → ⋯ → **Promote to Production** (ย้อนทันที ไม่ต้องแก้โค้ด) |
 | ต้องการยกเลิก commit ที่ผิด | `git revert <commit>` แล้ว push (**ห้าม** `git push --force`) |
 | schema.sql เปลี่ยนแล้วมีปัญหา | ต้องเขียนคำสั่ง SQL ย้อนกลับเอง — จึงต้อง export CSV ก่อนแก้ schema ทุกครั้ง |
+| trigger ของ migration 003–005 ขวางการใช้งานปกติ (ฉุกเฉิน) | ถอด trigger ชั่วคราวใน SQL Editor ตามคำสั่งด้านล่าง — ระบบยังใช้ได้เพราะ Server Action ตรวจกฎเดียวกันอยู่ แต่ช่องโหว่ยิง API ตรงจะกลับมา ต้องแก้แล้วรัน migration นั้นใหม่โดยเร็ว |
+
+```sql
+-- ถอด trigger ของใบงานซ่อม (migration 005)
+drop trigger if exists trg_mnt_enforce_insert on public.maintenance_records;
+drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
+-- ใส่คืน: รันไฟล์ supabase/migrations/005_maintenance_integrity.sql ใหม่ทั้งไฟล์
+```
 
 ---
 
@@ -216,6 +230,7 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | `lib/auth/roles.ts` → `safeNextPath` | กัน Open Redirect | ปฏิเสธ URL ภายนอกทุกรูปแบบ |
 | `supabase/migrations/002_staff_directory.sql` | view ข้าม RLS ของ profiles โดยตั้งใจ | เลือกแค่ id, full_name, role / ไม่ให้ anon |
 | `supabase/migrations/003–004` | trigger คุมความถูกต้องของ Alarm | ครอบคลุมทั้ง INSERT และ UPDATE / ผู้บันทึก-ผู้ปิดมาจาก `auth.uid()` |
+| `supabase/migrations/005` | trigger คุมความถูกต้องของใบงานซ่อม | ลำดับสถานะตรงกับ `features/maintenance/rules.ts`, ตรวจช่างผ่าน `staff_directory`, ผู้เปิดมาจาก `auth.uid()` |
 | Environment Variables ใน Vercel | ความลับ | ไม่มี Secret key หลุดไปอยู่ในตัวแปรที่ขึ้นต้น `NEXT_PUBLIC_` |
 
 ---
@@ -229,3 +244,4 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public' order b
 | 26 ก.ย. 2569 | ตั้ง Supabase project จริง (Singapore), เพิ่มข้อ 4.2 วิธีตรวจความปลอดภัยฐานข้อมูล, ผลทดสอบ RLS 23/23 ผ่าน |
 | 26 ก.ย. 2569 | เพิ่ม Module เครื่องจักร (เพิ่ม/แก้/ลบแบบ Soft Delete/ค้นหา), Audit Log, วิธีกู้เครื่องที่ถูกลบ |
 | 26 ก.ย. 2569 | เพิ่ม Module Alarm, migration 002–004, หัวข้อ 2.6 การรัน migration, รายการ review ของ trigger |
+| 26 ก.ย. 2569 | เพิ่ม Module งานซ่อมบำรุง (บอร์ด Kanban), migration 005, ปัญหาที่พบบ่อยของใบงานซ่อม |

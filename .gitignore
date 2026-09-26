@@ -42,3 +42,6 @@ next-env.d.ts
 
 # อนุญาตให้ commit ไฟล์ตัวอย่าง env (ไม่มีค่าจริง) — ไฟล์ .env.local ที่มีค่าจริงยังถูก ignore ตามบรรทัด .env* ด้านบน
 !.env.example
+
+# ไฟล์ key ชั่วคราวสำหรับทดสอบ API (สร้างแล้วลบทันทีหลังทดสอบ) — กันเผลอ commit
+public/__rls-probe-key.txt
