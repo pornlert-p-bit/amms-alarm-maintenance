@@ -367,6 +367,7 @@ flowchart LR
 | [ADR-004](adr/ADR-004-plc-integration-boundary.md) | กำหนด Integration Boundary ของ PLC ไว้ล่วงหน้า แต่ v1 ใช้ Simulator | Accepted |
 | [ADR-005](adr/ADR-005-audit-log-in-server-action.md) | เขียน Audit Log จาก Server Action ไม่ใช้ Database Trigger | Accepted |
 | [ADR-006](adr/ADR-006-least-privilege-grants.md) | ให้สิทธิ์ฐานข้อมูลเฉพาะ `authenticated` และ Default Deny | Accepted |
+| [ADR-007](adr/ADR-007-station-terminal-ui.md) | หน้าจอแบบ Station terminal ตามแนว ISA-101 | Accepted |
 
 ---
 
