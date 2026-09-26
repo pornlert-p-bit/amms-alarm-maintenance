@@ -36,7 +36,10 @@ export function KpiTile({
         <span>{label}</span>
         {code && <span className="font-mono text-[11px] font-semibold text-muted">{code}</span>}
       </div>
-      <div className={`mt-1 font-mono text-[26px] font-semibold leading-tight tabular-nums ${t.value}`}>{value}</div>
+      {/* ตัวเลขใช้ตัวใหญ่ ส่วนข้อความยาว เช่น "1 ชม. 4 นาที" ลดขนาดลงไม่ให้ตกบรรทัด */}
+      <div className={`mt-1 whitespace-nowrap font-mono font-semibold leading-tight tabular-nums ${typeof value === "number" ? "text-[26px]" : "text-[18px] leading-[33px]"} ${t.value}`}>
+        {value}
+      </div>
       {sub && <div className="mt-0.5 truncate text-[11.5px] text-muted">{sub}</div>}
     </>
   );

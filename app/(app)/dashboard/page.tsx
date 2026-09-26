@@ -42,7 +42,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const top = data.codeDaily ? pareto(data.codeDaily, from) : null;
 
   const rangeSwitch = (
-    <nav aria-label="ช่วงเวลา" className="flex gap-1 text-xs">
+    <nav aria-label="ช่วงเวลา" className="mb-5 flex gap-1 text-xs sm:mb-0">
       {DASHBOARD_RANGES.map((r) => (
         <Link
           key={r}
