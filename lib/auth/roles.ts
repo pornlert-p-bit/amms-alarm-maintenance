@@ -74,7 +74,7 @@ export function safeNextPath(next: unknown, fallback = "/dashboard"): string {
 export type NavItem = { href: string; label: string };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "แดชบอร์ด" },
+  { href: "/dashboard", label: "ภาพรวม" },
   { href: "/machines", label: "เครื่องจักร" },
   { href: "/alarms", label: "Alarm" },
   { href: "/maintenance", label: "งานซ่อมบำรุง" },
