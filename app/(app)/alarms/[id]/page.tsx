@@ -51,7 +51,10 @@ export default async function AlarmDetailPage({ params, searchParams }: Props) {
         <PageTitle title={`Alarm ${alarm.alarm_code}`} sub={alarm.machine?.machine_name ?? ""} />
         <div className="flex gap-2">
           {canAct && (
-            <Link href={`/alarms/${alarm.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
+            <>
+              <Link href={`/maintenance/new?alarm=${alarm.id}`} className={buttonClass.secondary}>เปิดใบงานซ่อม</Link>
+              <Link href={`/alarms/${alarm.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
+            </>
           )}
           <Link href="/alarms" className={buttonClass.secondary}>‹ กลับรายการ</Link>
         </div>
