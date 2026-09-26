@@ -40,6 +40,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
 | `features/maintenance/` | Module งานซ่อมบำรุง: กฎลำดับสถานะ (`rules.ts`), อ่านข้อมูลบอร์ด (`queries.ts`), เปิด/เปลี่ยนสถานะ/แก้ใบงาน (`actions.ts`), `components/` (ฟอร์ม, การ์ดบนบอร์ด, ปุ่มสถานะ) |
+| `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (ช่องตัวเลข, ผังเครื่อง, กราฟ recharts) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
 | `supabase/migrations/` | ไฟล์แก้ฐานข้อมูลที่ต้องรันตามลำดับกับ project ที่ใช้งานอยู่แล้ว (ดูข้อ 2.6) |
 | `app/(auth)/login/` | หน้า Login |
@@ -110,6 +111,7 @@ npm run dev     # เปิด http://localhost:3000
 | `003_alarm_integrity.sql` | trigger บังคับลำดับสถานะ Alarm และผู้ปิดจาก token (ตอนแก้ไข) | ✅ 26 ก.ย. 2569 |
 | `004_alarm_insert_integrity.sql` | trigger บังคับ Alarm ใหม่เริ่มที่ Open และผู้บันทึกจาก token (ตอนสร้าง) | ✅ 26 ก.ย. 2569 |
 | `005_maintenance_integrity.sql` | trigger คุมใบงานซ่อม (สถานะตามลำดับ, Done แก้ไม่ได้, Alarm ต้องเป็นของเครื่องเดียวกัน, ช่างต้องเป็น admin/technician) + ถอนสิทธิ์ลบ | ✅ 26 ก.ย. 2569 |
+| `006_dashboard_views.sql` | view นับ Alarm ต่อวัน/ต่อรหัส และเวลาซ่อม (ใช้กับกราฟและ MTTR) | ✅ 26 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
 
@@ -153,6 +155,8 @@ npm run dev     # เปิด http://localhost:3000
 | ใบงานซ่อมขึ้น **"ใบงานนี้เสร็จแล้ว แก้ไขไม่ได้"** หรือ **"ถูกเปลี่ยนสถานะไปแล้วโดยผู้อื่น"** | — | **ทำงานถูกต้อง** — ใบงานที่ Done ถูกล็อกเป็นประวัติ / มีคนกดเปลี่ยนก่อน ให้รีเฟรชหน้า |
 | ตัวเลือก "ช่างผู้รับผิดชอบ" **ว่าง** / หน้าเปิดใบงานขึ้น "โหลดรายชื่อช่างไม่ได้" | SQL: `select role, count(*) from staff_directory group by role;` | ยังไม่รัน migration 002 หรือไม่มีบัญชี role `technician`/`admin` |
 | ต้องการ**ลบใบงานซ่อมที่เปิดผิด** | — | เหมือน Alarm — ไม่มีสิทธิ์ลบผ่านเว็บ/API ผู้ดูแลลบใน SQL Editor: `delete from maintenance_records where id = '<id>' returning *;` |
+| หน้าภาพรวมขึ้น **"ยังแสดงกราฟไม่ได้ — ตรวจว่ารัน migration 006"** / MTTR เป็น "—" | SQL: `select * from dashboard_alarm_code_daily limit 5;` | ถ้า error ว่าไม่มี view ให้รัน migration 006 — ถ้า MTTR เป็น "—" แต่ view มีอยู่ แปลว่าช่วงนั้นยังไม่มี Alarm ที่ปิด (ถูกต้อง) |
+| ตัวเลขบนหน้าภาพรวม**ไม่อัปเดต**หลังแก้ข้อมูลใน SQL Editor | — | หน้านี้อ่านใหม่ทุกครั้งที่เปิด ให้กดรีเฟรช (v1 ไม่มี Realtime — 02 §9) |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -245,3 +249,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่ม Module เครื่องจักร (เพิ่ม/แก้/ลบแบบ Soft Delete/ค้นหา), Audit Log, วิธีกู้เครื่องที่ถูกลบ |
 | 26 ก.ย. 2569 | เพิ่ม Module Alarm, migration 002–004, หัวข้อ 2.6 การรัน migration, รายการ review ของ trigger |
 | 26 ก.ย. 2569 | เพิ่ม Module งานซ่อมบำรุง (บอร์ด Kanban), migration 005, ปัญหาที่พบบ่อยของใบงานซ่อม |
+| 26 ก.ย. 2569 | เพิ่มหน้าภาพรวม (Dashboard), migration 006, library `recharts` + `react-is` (peer ของ recharts ล็อกเวอร์ชันให้ตรงกับ `react`) |
