@@ -38,7 +38,7 @@
 | REQ-MNT-02 | 04 §2.1 | `maintenance_records.alarm_id` (nullable FK) | `maintenance/schema.ts` + trigger `enforce_maintenance_insert` | TC-MNT-02 | ✅ ผ่าน (W1 ผูก Alarm + I1 Alarm คนละเครื่องถูกปฏิเสธ) |
 | REQ-MNT-03 | 02 §4 | enum `mnt_status` (มี `Waiting Part`) | `maintenance/rules.ts` + trigger (migration 005) | TC-MNT-03 | ✅ ผ่าน (unit 16 กรณี + W5 + U5, U6, U11) |
 | REQ-MNT-04 | 04 §3 (BR-04) | `mnt_done_requires_action` | `maintenance/actions.ts` → `changeMaintenanceStatus` | TC-MNT-04 | ✅ ผ่าน (W7, W8 + U9) |
-| REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` + `authorizeAction(isStaff)` | TC-MNT-05 | 🟡 ฝั่ง API ผ่าน (I2, U7, D1) — ยังไม่ได้เปิดด้วยบัญชี viewer |
+| REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` + `authorizeAction(isStaff)` | TC-MNT-05 | ✅ ผ่าน (viewer V1–V5 + API I2, U7, D1) |
 | REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | ✅ ผ่าน (M8–M10) |
 | REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | ✅ ผ่าน (A11) |
 | REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` → `getMaintenanceBoard` | TC-SRC-03 | ✅ ผ่าน (W11, W12) |
