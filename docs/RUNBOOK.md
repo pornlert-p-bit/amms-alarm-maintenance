@@ -34,7 +34,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `app/globals.css` | ชุดสี (token) และฟอนต์ของธีม Station terminal — แก้สีทั้งระบบที่นี่ที่เดียว |
 | `components/station/` | ชิ้นส่วนหน้าจอ: `group-box` (กรอบมีหัวข้อ), `status-pill` (ป้ายสถานะ), `shift-clock` (กะ + นาฬิกา), `top-nav` (เมนูบน), `page-title` |
 | `lib/shift.ts` | คำนวณกะเช้า/บ่าย/ดึกจากชั่วโมง (มี unit test) |
-| `features/machine/` | Module เครื่องจักร: `schema.ts` (กฎตรวจข้อมูล), `rules.ts` (กฎธุรกิจ), `queries.ts` (อ่าน), `actions.ts` (เพิ่ม/แก้/ลบ), `components/` (ฟอร์ม, ปุ่มลบ) |
+| `features/machine/` | Module เครื่องจักร: `schema.ts` (กฎตรวจข้อมูล), `rules.ts` (กฎธุรกิจ), `queries.ts` (อ่าน), `actions.ts` (เพิ่ม/แก้/ลบ), `components/` (ฟอร์ม, ปุ่มลบ), `timeline.ts` + `history-queries.ts` (หน้าประวัติเครื่อง `/machines/[id]`) |
 | `features/audit/` | `write.ts` จุดเดียวที่เขียน Audit Log (ADR-005), `queries.ts` + `format.ts` สำหรับหน้า `/audit` (Admin เท่านั้น) |
 | `lib/action-result.ts` | รูปแบบผลลัพธ์ของ Server Action + แปลง error ฐานข้อมูลเป็นข้อความไทย |
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
@@ -173,6 +173,8 @@ npm run dev     # เปิด http://localhost:3000
 | ต้องการ**แก้ชื่อผู้ใช้** | — | หน้าเว็บแก้ได้แค่ Role (migration 007) — ผู้ดูแลแก้ใน SQL Editor: `update profiles set full_name = '...' where id = '<id>';` |
 | หน้า Audit Log มีการกระทำเป็น**รหัสภาษาอังกฤษ** (เช่น `machine.archive`) แทนข้อความไทย | `features/audit/format.ts` | เป็น action ใหม่ที่ยังไม่ได้เพิ่มคำแปล — เพิ่มใน `ACTION_LABEL` (ข้อมูลไม่ได้ผิด) |
 | ต้องการ**ลบ Audit Log** | — | ระบบตั้งใจไม่ให้ลบผ่านเว็บ/API (หลักฐานต้องไม่หาย) — ถ้าจำเป็นจริง (เช่น ล้างข้อมูลทดสอบ) ผู้ดูแลลบใน SQL Editor แล้วบันทึกเหตุผล |
+| หน้าประวัติเครื่อง**ไม่มีเหตุการณ์ "สถานะ …"** ทั้งที่เครื่องมีสถานะ MAINT/STOP | SQL: `select * from machine_status_history where machine_id = '<id>';` | ถูกต้อง — ประวัติบันทึกเฉพาะตอน**เปลี่ยน**สถานะ (trigger `trg_machines_status_history`) สถานะที่ตั้งตอนเพิ่มเครื่องจะไม่มีประวัติ |
+| หน้าเว็บบนมือถือ**เลื่อนซ้ายขวาได้ทั้งหน้า** | DevTools → หาองค์ประกอบที่กว้างเกินจอ | มักเป็นตารางที่ไม่ได้ใช้ `tableClass.wrap` (ต้องมี `relative overflow-x-auto`) หรือปุ่มหัวหน้าเพจที่ไม่ได้ใช้ `PageHeader` |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -271,3 +273,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่มหน้าผู้ใช้งาน (เปลี่ยน Role), migration 007, วิธีแก้กรณีไม่มี admin / แก้ชื่อผู้ใช้ |
 | 26 ก.ย. 2569 | เพิ่มข้อ 2.7 ข้อมูลสาธิต Alarm ย้อนหลัง และวิธีลบ |
 | 26 ก.ย. 2569 | เพิ่มหน้า Audit Log (`/audit`), migration 008, ADR-005 Revision 2 |
+| 26 ก.ย. 2569 | เพิ่มหน้าประวัติเครื่อง (`/machines/[id]`), `PageHeader` ใช้ร่วมกัน, แก้หน้ากว้างเกินจอบนมือถือ |

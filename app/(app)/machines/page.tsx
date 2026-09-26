@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { GroupBox } from "@/components/station/group-box";
 import { MachineStatusBadge } from "@/components/station/machine-status-badge";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { buttonClass, inputClass, Notice, tableClass } from "@/components/station/ui";
 import { DeleteMachineButton } from "@/features/machine/components/delete-machine-button";
 import { getMachines, MACHINE_PAGE_SIZE } from "@/features/machine/queries";
@@ -46,14 +46,13 @@ export default async function MachinesPage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title="เครื่องจักร" sub="Machine Master" />
+      <PageHeader title="เครื่องจักร" sub="Machine Master">
         {admin && (
           <Link href="/machines/new" className={buttonClass.primary}>
             + เพิ่มเครื่องจักร
           </Link>
         )}
-      </div>
+      </PageHeader>
 
       {/* แสดงผลการบันทึก/ลบ — ใช้ sanitizeSearch กันข้อความแปลก ๆ ที่ถูกใส่มาใน URL */}
       {sp.saved && <Notice tone="ok">บันทึกเครื่องจักร {sanitizeSearch(sp.saved)} แล้ว</Notice>}
@@ -126,7 +125,9 @@ export default async function MachinesPage({ searchParams }: Props) {
                 <tbody>
                   {rows.map((m) => (
                     <tr key={m.id} className="hover:bg-accent-soft/40">
-                      <td className={`${tableClass.td} ${tableClass.mono} font-semibold`}>{m.machine_id}</td>
+                      <td className={`${tableClass.td} ${tableClass.mono} font-semibold`}>
+                        <Link href={`/machines/${m.id}`} className="text-accent hover:underline" title="ดูประวัติเครื่อง">{m.machine_id}</Link>
+                      </td>
                       <td className={tableClass.td}>{m.machine_name}</td>
                       <td className={tableClass.td}>{m.machine_type}</td>
                       <td className={tableClass.td}>{m.location}</td>

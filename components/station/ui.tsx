@@ -76,7 +76,11 @@ export function inputClass(hasError: boolean, extra = "") {
 /* ─────────── ตาราง ─────────── */
 
 export const tableClass = {
-  wrap: "overflow-x-auto rounded-[3px] border border-line",
+  /**
+   * ต้องมี relative: ข้อความ sr-only ในป้ายสถานะเป็น position:absolute ถ้ากรอบไม่ใช่ relative
+   * มันจะหลุดออกนอกกรอบที่เลื่อนได้ และทำให้ทั้งหน้ากว้างเกินจอบนมือถือ
+   */
+  wrap: "relative overflow-x-auto rounded-[3px] border border-line",
   table: "w-full border-collapse text-[13.5px]",
   th: "whitespace-nowrap border-b border-line bg-panelhead px-3 py-2 text-left text-xs font-semibold text-ink-2",
   td: "border-b border-line px-3 py-2 align-middle",

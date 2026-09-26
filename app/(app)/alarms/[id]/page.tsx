@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AlarmStatusBadge } from "@/components/station/alarm-status-badge";
 import { GroupBox } from "@/components/station/group-box";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { buttonClass, Notice } from "@/components/station/ui";
 import { AlarmActions } from "@/features/alarm/components/alarm-actions";
 import { getAlarmById } from "@/features/alarm/queries";
@@ -32,7 +32,9 @@ export default async function AlarmDetailPage({ params, searchParams }: Props) {
 
   const rows: [string, React.ReactNode, boolean?][] = [
     ["เครื่องจักร", <>
-      <span className="font-mono font-semibold">{alarm.machine?.machine_id ?? "—"}</span> · {alarm.machine?.machine_name}
+      {alarm.machine ? (
+        <Link href={`/machines/${alarm.machine.id}`} className="font-mono font-semibold text-accent hover:underline">{alarm.machine.machine_id}</Link>
+      ) : "—"} · {alarm.machine?.machine_name}
       {alarm.machine?.deleted_at && <span className="ml-1 text-xs text-muted">(ลบแล้ว)</span>}
     </>],
     ["รหัส Alarm", <span key="c" className="font-mono font-semibold">{alarm.alarm_code}</span>],
@@ -47,18 +49,15 @@ export default async function AlarmDetailPage({ params, searchParams }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title={`Alarm ${alarm.alarm_code}`} sub={alarm.machine?.machine_name ?? ""} />
-        <div className="flex gap-2">
-          {canAct && (
-            <>
-              <Link href={`/maintenance/new?alarm=${alarm.id}`} className={buttonClass.secondary}>เปิดใบงานซ่อม</Link>
-              <Link href={`/alarms/${alarm.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
-            </>
-          )}
-          <Link href="/alarms" className={buttonClass.secondary}>‹ กลับรายการ</Link>
-        </div>
-      </div>
+      <PageHeader title={`Alarm ${alarm.alarm_code}`} sub={alarm.machine?.machine_name ?? ""}>
+        {canAct && (
+          <>
+            <Link href={`/maintenance/new?alarm=${alarm.id}`} className={buttonClass.secondary}>เปิดใบงานซ่อม</Link>
+            <Link href={`/alarms/${alarm.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
+          </>
+        )}
+        <Link href="/alarms" className={buttonClass.secondary}>‹ กลับรายการ</Link>
+      </PageHeader>
 
       {sp.created && <Notice tone="ok">บันทึก Alarm แล้ว</Notice>}
       {sp.updated === "started" && <Notice tone="ok">รับงานแล้ว — สถานะเป็น In Progress</Notice>}
