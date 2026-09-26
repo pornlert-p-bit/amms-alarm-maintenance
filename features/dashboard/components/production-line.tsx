@@ -10,6 +10,9 @@ import type { FloorMachine } from "../queries";
  * บนจอแคบ ไลน์ที่ยาวเกินจอเลื่อนซ้าย-ขวาได้ภายในกรอบ เหมือนการ pan ผังบนจอ HMI
  *
  * สีตาม ISA-101: RUN/STOP เป็นเทา (STOP ใช้เส้นประ = เครื่องไม่เดิน), MAINT ส้ม, ALARM แดง
+ *
+ * เครื่องที่มี Alarm ค้างแต่สถานะยังเป็น RUN/STOP (สถานะเครื่องเปลี่ยนด้วยมือใน v1 — ยังไม่มี PLC จริง)
+ * จะได้ขอบแดงด้วย เพื่อให้คนเฝ้าจอเห็นทันทีว่าเครื่องไหนมีเรื่องค้าง แม้ป้ายสถานะยังไม่ถูกเปลี่ยน
  */
 const BOX: Record<MachineStatus, string> = {
   Running: "border-line-strong bg-white",
@@ -55,7 +58,7 @@ export function ProductionLine({ lines }: { lines: { location: string; machines:
                 <Link
                   href={`/machines/${m.id}`}
                   title={`${m.machine_id} · ${m.machine_name} — ดูประวัติเครื่อง`}
-                  className={`block w-[150px] rounded-[3px] border-2 px-2.5 py-1.5 transition-colors hover:border-accent ${BOX[m.status]}`}
+                  className={`block w-[150px] rounded-[3px] border-2 px-2.5 py-1.5 transition-colors hover:border-accent ${m.openAlarms > 0 && m.status !== "Alarm" ? "border-bad bg-white" : BOX[m.status]}`}
                 >
                   <div className="flex items-baseline justify-between gap-1">
                     <span className="font-mono text-[13px] font-bold">{m.machine_id}</span>

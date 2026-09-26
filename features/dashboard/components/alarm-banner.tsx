@@ -29,27 +29,36 @@ export function AlarmBanner({ alarms }: { alarms: ActiveAlarm[] }) {
   }
 
   const hot = open > 0;
+  const viewAll = (
+    <Link href="/alarms" className="flex items-center px-3 py-2 text-xs text-accent hover:bg-panelhead">
+      ดูทั้งหมด ›
+    </Link>
+  );
   return (
+    // จอกว้าง: เรียงเป็นแถวเดียวแบบแถบ Alarm ของ SCADA / จอมือถือ: หัวแถบอยู่บน รายการ Alarm อยู่ล่าง
     <div
       role="alert"
       aria-label={`Alarm ค้าง ${alarms.length} รายการ ยังไม่มีผู้รับ ${open} รายการ`}
-      className={`flex flex-wrap items-stretch overflow-hidden rounded-[3px] border ${hot ? "border-bad" : "border-warn"} bg-white`}
+      className={`flex flex-col overflow-hidden rounded-[3px] border sm:flex-row sm:items-stretch ${hot ? "border-bad" : "border-warn"} bg-white`}
     >
-      <div className={`flex items-center gap-2 px-3 py-2 font-mono text-[13px] font-bold ${hot ? "bg-bad text-white" : "bg-warn-bg text-warn-ink"}`}>
-        <span aria-hidden="true" className={hot ? "motion-safe:animate-pulse" : ""}>▲</span>
-        {alarms.length} ALARM
+      <div className="flex items-stretch border-b border-line sm:border-b-0 sm:border-r">
+        <div className={`flex items-center gap-2 px-3 py-2 font-mono text-[13px] font-bold ${hot ? "bg-bad text-white" : "bg-warn-bg text-warn-ink"}`}>
+          <span aria-hidden="true" className={hot ? "motion-safe:animate-pulse" : ""}>▲</span>
+          {alarms.length} ALARM
+        </div>
+        <div className="flex items-center gap-3 whitespace-nowrap px-3 text-xs">
+          {open > 0 && <span className="font-semibold text-bad-ink">ยังไม่มีผู้รับ {open}</span>}
+          {inProgress > 0 && <span className="text-warn-ink">กำลังแก้ {inProgress}</span>}
+        </div>
+        <div className="ml-auto flex sm:hidden">{viewAll}</div>
       </div>
-      <div className="flex items-center gap-3 border-r border-line px-3 text-xs">
-        {open > 0 && <span className="font-semibold text-bad-ink">ยังไม่มีผู้รับ {open}</span>}
-        {inProgress > 0 && <span className="text-warn-ink">กำลังแก้ {inProgress}</span>}
-      </div>
-      <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1 gap-y-1 px-2 py-1.5">
+      <ul className="flex min-w-0 flex-1 flex-wrap items-center gap-1 px-2 py-1.5">
         {alarms.slice(0, SHOWN).map((a) => (
           <li key={a.id}>
             <Link
               href={`/alarms/${a.id}`}
               title={`${a.machine_code} ${a.alarm_code} — ${formatDateTime(a.occurred_at)}`}
-              className={`inline-flex items-center gap-1.5 rounded-[3px] border px-2 py-0.5 font-mono text-xs hover:bg-panelhead ${a.status === "Open" ? "border-bad text-bad-ink" : "border-warn text-warn-ink"}`}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[3px] border px-2 py-0.5 font-mono text-xs hover:bg-panelhead ${a.status === "Open" ? "border-bad text-bad-ink" : "border-warn text-warn-ink"}`}
             >
               <span className="font-semibold">{a.machine_code}</span>
               <span>{a.alarm_code}</span>
@@ -59,9 +68,7 @@ export function AlarmBanner({ alarms }: { alarms: ActiveAlarm[] }) {
         ))}
         {alarms.length > SHOWN && <li className="px-1 text-xs text-muted">+{alarms.length - SHOWN}</li>}
       </ul>
-      <Link href="/alarms" className="flex items-center border-l border-line px-3 text-xs text-accent hover:bg-panelhead">
-        ดูทั้งหมด ›
-      </Link>
+      <div className="hidden border-l border-line sm:flex">{viewAll}</div>
     </div>
   );
 }
