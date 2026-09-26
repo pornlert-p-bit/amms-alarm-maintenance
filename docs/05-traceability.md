@@ -42,11 +42,11 @@
 | REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | ✅ ผ่าน (M8–M10) |
 | REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | ✅ ผ่าน (A11) |
 | REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` → `getMaintenanceBoard` | TC-SRC-03 | ✅ ผ่าน (W11, W12) |
-| REQ-DSH-01 | 04 §6 | query `group by status` | `dashboard/queries.ts` | TC-DSH-01 | รอ implement |
-| REQ-DSH-02 | 04 §6 | `idx_machines_status` | `dashboard/queries.ts` | TC-DSH-02 | รอ implement |
-| REQ-DSH-03 | 04 §6 | `idx_alarms_open`, `idx_mnt_status` | `dashboard/queries.ts` | TC-DSH-03 | รอ implement |
-| REQ-DSH-04 | 04 §6 | `idx_alarms_occurred` | `dashboard/AlarmTrendChart.tsx` | TC-DSH-04 | รอ implement |
-| REQ-DSH-05 | 04 §6 | `idx_alarms_occurred` | `dashboard/RecentAlarms.tsx` | TC-DSH-05 | รอ implement |
+| REQ-DSH-01 | 04 §6 | `machines` (นับจากรายการที่ใช้วาดผังอยู่แล้ว) | `dashboard/queries.ts` + `metrics.ts` | TC-DSH-01 | ✅ ผ่าน (D2 + unit) [รายงาน Dashboard](test-reports/2026-09-26-dashboard.md) |
+| REQ-DSH-02 | 04 §6 | `idx_machines_status` | `metrics.ts` → `countByStatus` | TC-DSH-02 | ✅ ผ่าน (D2, D4 + unit) |
+| REQ-DSH-03 | 04 §6 | `idx_alarms_open`, `idx_mnt_status` | `dashboard/queries.ts` | TC-DSH-03 | ✅ ผ่าน (D3) |
+| REQ-DSH-04 | 04 §6 | view `dashboard_alarm_code_daily` (migration 006) | `dashboard/components/charts.tsx` → `DailyAlarmChart` | TC-DSH-04 | ✅ ผ่าน (D7, D8 + unit) |
+| REQ-DSH-05 | 04 §6 | `idx_alarms_occurred` | `app/(app)/dashboard/page.tsx` (กรอบ Alarm ล่าสุด) | TC-DSH-05 | ✅ ผ่าน (D6) |
 | REQ-VAL-01 | 03 §5.3 | `check btrim(...) <> ''` ทุกตาราง | `features/*/schema.ts` (zod) | TC-VAL-01 | ✅ ผ่าน (M3 + unit) |
 | REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | ✅ ผ่าน (M4, M5, M7 + unit) |
 | REQ-VAL-03 | 03 §5.3 | — | `lib/action-result.ts`, `components/station/ui.tsx` | TC-VAL-03 | ✅ ผ่าน (M3, M5, M6) |
@@ -67,7 +67,7 @@
 | REQ ID | Design | DB Object | Implementation (แผน) | Test ID | สถานะ |
 |---|---|---|---|---|---|
 | REQ-BON-01 | 02 §3.1 | enum `user_role` = `viewer` | `lib/auth/dal.ts`, `components/station/top-nav.tsx` | TC-BON-01 | ✅ ผ่านระดับ RLS (V2, V3) |
-| REQ-BON-02 | 04 §6 | `idx_alarms_code` | `dashboard/TopAlarmCodes.tsx` | TC-BON-02 | รอ implement |
+| REQ-BON-02 | 04 §6 | view `dashboard_alarm_code_daily` | `charts.tsx` → `ParetoChart` + `metrics.ts` → `pareto` | TC-BON-02 | ✅ ผ่าน (D9 + unit) — ทำเป็น Pareto แทน Top 5 |
 | REQ-BON-03 | 02 §3.1, ADR-004 | `machine_status_history` | `machines/[id]/history/page.tsx` | TC-BON-03 | รอ implement |
 | REQ-BON-04 | 03 §4 | — | `app/api/export/alarms/route.ts` | TC-BON-04 | รอ implement |
 | REQ-BON-05 | ADR-005 | `audit_logs` + RLS admin only | `app/(app)/audit/page.tsx` | TC-BON-05 | 🟡 RLS ผ่าน (P7) — หน้าแสดงผลยังไม่ทำ |
