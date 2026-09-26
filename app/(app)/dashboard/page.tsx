@@ -4,9 +4,11 @@ import Link from "next/link";
 import { AlarmStatusBadge } from "@/components/station/alarm-status-badge";
 import { GroupBox } from "@/components/station/group-box";
 import { PageHeader } from "@/components/station/page-title";
+import { StatusPill } from "@/components/station/status-pill";
+import { tableClass } from "@/components/station/ui";
+import { AlarmBanner } from "@/features/dashboard/components/alarm-banner";
 import { DailyAlarmChart, ParetoChart } from "@/features/dashboard/components/charts";
-import { KpiTile } from "@/features/dashboard/components/kpi-tile";
-import { PlantFloor } from "@/features/dashboard/components/plant-floor";
+import { ProductionLine } from "@/features/dashboard/components/production-line";
 import {
   countByStatus,
   dailySeries,
@@ -26,7 +28,11 @@ export const metadata: Metadata = { title: "ภาพรวม" };
 
 type Props = { searchParams: Promise<{ range?: string }> };
 
-/** หน้าภาพรวม — ทุก Role ดูได้ (REQ-DSH-01…05, REQ-BON-01, REQ-BON-02) */
+/**
+ * หน้าภาพรวม — ทุก Role ดูได้ (REQ-DSH-01…05, REQ-BON-01, REQ-BON-02)
+ * จัดหน้าแบบจอ SCADA ในห้องควบคุม: แถบ Alarm บนสุด → แถบสถานะรวม → ผังสายการผลิต → แนวโน้ม → บันทึกเหตุการณ์
+ * (เหตุผลการออกแบบ: ADR-007 Revision)
+ */
 export default async function DashboardPage({ searchParams }: Props) {
   const user = await requireUser();
   const range = parseRange((await searchParams).range);
@@ -57,59 +63,46 @@ export default async function DashboardPage({ searchParams }: Props) {
   );
   const viewMissing = <p className="py-6 text-center text-muted">ยังแสดงกราฟไม่ได้ — ตรวจว่ารัน migration 006 แล้ว (RUNBOOK ข้อ 2.6)</p>;
 
+  const mttrText = repair ? formatDuration(repair.minutes) : "—";
+
   return (
     <>
-      <PageHeader title="ภาพรวมโรงงาน" sub={`ยินดีต้อนรับ ${user.fullName}`}>
+      <PageHeader title="หน้าจอควบคุมการผลิต" sub={`ยินดีต้อนรับ ${user.fullName}`}>
         {rangeSwitch}
       </PageHeader>
 
       <div className="space-y-6">
-        <GroupBox title="สรุปสถานะ" aside={`MTTR และกราฟ: ${range} วันล่าสุด`}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
-            <KpiTile label="เครื่องทั้งหมด" value={data.machines.length} sub="เครื่อง" href="/machines" />
-            <KpiTile label="ทำงาน" code="RUN" value={counts.Running} sub="เครื่อง" />
-            <KpiTile label="หยุด" code="STOP" value={counts.Stop} sub="เครื่อง" />
-            <KpiTile label="เกิด Alarm" code="ALARM" value={counts.Alarm} sub="เครื่อง" tone={counts.Alarm > 0 ? "bad" : "neutral"} />
-            <KpiTile label="ซ่อมบำรุง" code="MAINT" value={counts.Maintenance} sub="เครื่อง" tone={counts.Maintenance > 0 ? "warn" : "neutral"} />
-            <KpiTile label="Alarm ค้าง" value={data.openAlarmCount} sub="รายการที่ยังไม่ปิด" href="/alarms"
-              tone={data.openAlarmCount > 0 ? "bad" : "neutral"} />
-            <KpiTile label="งานซ่อมค้าง" value={data.activeJobCount}
-              sub={data.waitingPartCount > 0 ? `รออะไหล่ ${data.waitingPartCount}` : "ใบงานที่ยังไม่เสร็จ"} href="/maintenance"
-              tone={data.waitingPartCount > 0 ? "warn" : "neutral"} />
-            <KpiTile label="MTTR" value={repair ? formatDuration(repair.minutes) : "—"}
-              sub={repair ? `จาก ${repair.closed} Alarm ที่ปิด` : "ยังไม่รัน migration 006"} />
-          </div>
-        </GroupBox>
+        {/* 1) แถบ Alarm — สิ่งแรกที่คนเฝ้าจอต้องเห็น (REQ-DSH-03) */}
+        <AlarmBanner alarms={data.activeAlarms} />
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <GroupBox title="ผังเครื่องจักร" aside="คลิกเครื่องเพื่อดูประวัติ">
-            <PlantFloor lines={lines} />
-          </GroupBox>
-
-          <GroupBox title="Alarm ล่าสุด" aside={<Link href="/alarms" className="text-accent hover:underline">ทั้งหมด ›</Link>}>
-            {data.recentAlarms.length === 0 ? (
-              <p className="py-6 text-center text-muted">ยังไม่มี Alarm ในระบบ</p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {data.recentAlarms.map((a) => (
-                  <li key={a.id}>
-                    <Link href={`/alarms/${a.id}`}
-                      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 px-1 py-2 hover:bg-accent-soft/40 ${a.status === "Open" ? "bg-bad-bg/40" : ""}`}>
-                      <span className="truncate text-[13px]">
-                        <span className="font-mono font-semibold">{a.machine?.machine_id ?? "—"}</span>
-                        <span className="mx-1.5 text-muted">·</span>
-                        <span className="font-mono">{a.alarm_code}</span>
-                      </span>
-                      <AlarmStatusBadge status={a.status} />
-                      <span className="font-mono text-[11.5px] text-muted">{formatDateTime(a.occurred_at)}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </GroupBox>
+        {/* 2) แถบสถานะรวม — แบบแถบสถานะด้านบนของจอ HMI ไม่ใช่แถวการ์ด (REQ-DSH-01, 02, 03) */}
+        <div role="group" aria-label="สรุปสถานะ" className="-mt-3 flex flex-wrap gap-2">
+          <Link href="/machines" className="rounded-[3px] hover:opacity-80">
+            <StatusPill label="เครื่องทั้งหมด" value={data.machines.length} tone="neutral" />
+          </Link>
+          <StatusPill label="RUN" value={counts.Running} tone="neutral" />
+          <StatusPill label="STOP" value={counts.Stop} tone="neutral" />
+          <StatusPill label="ALARM" value={counts.Alarm} tone={counts.Alarm > 0 ? "bad" : "neutral"} />
+          <StatusPill label="MAINT" value={counts.Maintenance} tone={counts.Maintenance > 0 ? "warn" : "neutral"} />
+          <Link href="/maintenance" className="rounded-[3px] hover:opacity-80">
+            <StatusPill
+              label="งานซ่อมค้าง"
+              value={data.waitingPartCount > 0 ? `${data.activeJobCount} · รออะไหล่ ${data.waitingPartCount}` : data.activeJobCount}
+              tone={data.waitingPartCount > 0 ? "warn" : "neutral"}
+            />
+          </Link>
+          <StatusPill label={`MTTR ${range} วัน`} value={repair ? `${mttrText} (${repair.closed})` : mttrText} tone="neutral" />
         </div>
 
+        {/* 3) ผังสายการผลิต */}
+        <GroupBox title="ผังสายการผลิต" aside="คลิกเครื่องเพื่อดูประวัติ">
+          <ProductionLine lines={lines} />
+          <p className="mt-2 text-xs text-muted">
+            ALM = Alarm ค้าง · WO = ใบงานซ่อมที่ยังไม่เสร็จ · กรอบเส้นประ = เครื่องหยุด · ลูกศร = ทิศทางงานในไลน์
+          </p>
+        </GroupBox>
+
+        {/* 4) แนวโน้ม */}
         <div className="grid gap-6 lg:grid-cols-2">
           <GroupBox title="Alarm ต่อวัน" aside={daily ? `รวม ${daily.reduce((s, d) => s + d.total, 0)} ครั้ง` : undefined}>
             {daily ? <DailyAlarmChart data={daily} /> : viewMissing}
@@ -128,6 +121,38 @@ export default async function DashboardPage({ searchParams }: Props) {
             )}
           </GroupBox>
         </div>
+
+        {/* 5) บันทึกเหตุการณ์ล่าสุด แบบ Event Summary ของจอ SCADA (REQ-DSH-05) */}
+        <GroupBox title="บันทึกเหตุการณ์ Alarm ล่าสุด" aside={<Link href="/alarms" className="text-accent hover:underline">ทั้งหมด ›</Link>}>
+          {data.recentAlarms.length === 0 ? (
+            <p className="py-6 text-center text-muted">ยังไม่มี Alarm ในระบบ</p>
+          ) : (
+            <div className={tableClass.wrap}>
+              <table className={tableClass.table}>
+                <thead>
+                  <tr>
+                    <th className={tableClass.th}>เวลาเกิด</th>
+                    <th className={tableClass.th}>เครื่อง</th>
+                    <th className={tableClass.th}>รหัส</th>
+                    <th className={tableClass.th}>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recentAlarms.map((a) => (
+                    <tr key={a.id} className={a.status === "Open" ? "bg-bad-bg/40" : "hover:bg-accent-soft/40"}>
+                      <td className={`${tableClass.td} ${tableClass.mono} whitespace-nowrap`}>{formatDateTime(a.occurred_at)}</td>
+                      <td className={`${tableClass.td} ${tableClass.mono} font-semibold`}>{a.machine?.machine_id ?? "—"}</td>
+                      <td className={`${tableClass.td} ${tableClass.mono}`}>
+                        <Link href={`/alarms/${a.id}`} className="text-accent hover:underline">{a.alarm_code}</Link>
+                      </td>
+                      <td className={tableClass.td}><AlarmStatusBadge status={a.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </GroupBox>
       </div>
     </>
   );

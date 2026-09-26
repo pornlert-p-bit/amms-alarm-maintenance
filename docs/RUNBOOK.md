@@ -40,7 +40,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
 | `features/maintenance/` | Module งานซ่อมบำรุง: กฎลำดับสถานะ (`rules.ts`), อ่านข้อมูลบอร์ด (`queries.ts`), เปิด/เปลี่ยนสถานะ/แก้ใบงาน (`actions.ts`), `components/` (ฟอร์ม, การ์ดบนบอร์ด, ปุ่มสถานะ) |
-| `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (ช่องตัวเลข, ผังเครื่อง, กราฟ recharts) |
+| `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (แถบ Alarm `alarm-banner.tsx`, ผังสายการผลิต `production-line.tsx`, กราฟ recharts, ช่องตัวเลข `kpi-tile.tsx` ที่หน้าประวัติเครื่องใช้) |
 | `features/users/` | หน้าผู้ใช้งาน: กฎเปลี่ยน Role (`rules.ts`), รายชื่อ (`queries.ts`), เปลี่ยน Role + Audit Log (`actions.ts`) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
 | `supabase/seed/` | ข้อมูลสาธิต (Alarm ย้อนหลัง) + สคริปต์สร้าง — ดูข้อ 2.7 |
@@ -274,3 +274,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่มข้อ 2.7 ข้อมูลสาธิต Alarm ย้อนหลัง และวิธีลบ |
 | 26 ก.ย. 2569 | เพิ่มหน้า Audit Log (`/audit`), migration 008, ADR-005 Revision 2 |
 | 26 ก.ย. 2569 | เพิ่มหน้าประวัติเครื่อง (`/machines/[id]`), `PageHeader` ใช้ร่วมกัน, แก้หน้ากว้างเกินจอบนมือถือ |
+| 26 ก.ย. 2569 | จัดหน้าภาพรวมใหม่แบบจอ SCADA (ADR-007 Revision) |
