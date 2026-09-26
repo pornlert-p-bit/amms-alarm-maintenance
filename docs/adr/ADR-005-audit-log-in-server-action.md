@@ -56,3 +56,20 @@ Requirement กำหนดว่าการเปลี่ยนสถาน�
 | เก็บที่ | ตาราง `audit_logs` | Vercel Runtime Log |
 | ผู้เข้าถึง | Admin ผ่านหน้าในระบบ | ผู้พัฒนา |
 | ตัวอย่าง | `alarm.close` / entity `ALM-103` / actor `U22` | `closeAlarm failed: alarm_id=ALM-103, user=U22, reason=invalid_transition` |
+
+---
+
+## Revision — 26 กันยายน 2569 (พบระหว่าง implement Module Machine)
+
+**สิ่งที่ต่างจาก Decision ข้อ 1:** การเขียนข้อมูลกับการเขียน Audit Log **ไม่ได้อยู่ใน transaction เดียวกัน**
+
+**สาเหตุ:** Server Action เรียกฐานข้อมูลผ่าน Supabase Data API (PostgREST) ซึ่งแต่ละคำสั่งเป็น transaction แยกกัน ไม่มีคำสั่ง BEGIN/COMMIT ครอบหลายคำสั่งให้ใช้
+
+**สิ่งที่ทำแทนใน v1:**
+- เขียนข้อมูลก่อน แล้วค่อยเขียน Audit Log (`features/audit/write.ts`)
+- ถ้าเขียน Audit Log ไม่สำเร็จ **ข้อมูลที่แก้แล้วจะไม่ถูกย้อนกลับ** แต่จะเขียน error พร้อม context ลง server log (`writeAudit failed: action=…, entity=…, actor=…`) ให้ตามแก้ได้
+- ไม่แจ้งผู้ใช้ว่า "บันทึกล้มเหลว" เพราะข้อมูลเข้าฐานข้อมูลไปแล้วจริง การบอกว่าล้มเหลวจะทำให้ผู้ใช้กดบันทึกซ้ำ
+
+**ความเสี่ยงที่ยอมรับ:** อาจมีการเปลี่ยนแปลงที่ไม่มี Audit Log ในกรณีที่ฐานข้อมูลล่มพอดีระหว่างสองคำสั่ง ซึ่งโอกาสเกิดต่ำในระบบขนาดนี้ และ `machine_status_history` ยังบันทึกผ่าน Trigger (atomic) อยู่
+
+**ทางแก้ถ้าต้องการ atomic จริงในอนาคต:** ย้ายแต่ละ mutation ไปเป็นฟังก์ชัน PostgreSQL (เรียกผ่าน `supabase.rpc()`) แบบ `security invoker` เพื่อให้ RLS ยังทำงาน แล้วเขียนทั้งข้อมูลและ Audit Log ในฟังก์ชันเดียว — แลกกับการที่กฎบางส่วนย้ายไปอยู่ใน SQL

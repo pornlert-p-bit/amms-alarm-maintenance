@@ -22,11 +22,11 @@
 | REQ-AUTH-04 | 04 §2.1 | trigger `handle_new_user` | `supabase/schema.sql` §4.4 | TC-AUTH-04 | ✅ ผ่าน (สร้างบัญชีจริง 3 บัญชี) |
 | REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/audit`, `users/actions.ts` | TC-AUTH-05 | 🟡 ผ่านระดับ RLS (A3) — หน้า UI ยังไม่ทำ |
 | REQ-AUTH-06 | 04 §4 (BR-07) | RLS `profiles_admin_update_others` (`id <> auth.uid()`) | `users/actions.ts` + RLS | TC-AUTH-06 | ✅ ผ่านระดับ RLS (A2, T4, V4) — หน้า UI ยังไม่ทำ |
-| REQ-MCH-01 | 02 §3.1 | `machines` | `features/machine/actions.ts` | TC-MCH-01 | รอ implement |
-| REQ-MCH-02 | 04 §2 | `machines` (5 คอลัมน์) | `features/machine/schema.ts` | TC-MCH-02 | รอ implement |
-| REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | รอ implement |
-| REQ-MCH-04 | 02 §4 | enum `machine_status` | `types/status.ts` | TC-MCH-04 | รอ implement |
-| REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | รอ implement |
+| REQ-MCH-01 | 02 §3.1 | `machines` | `features/machine/actions.ts`, `app/(app)/machines/` | TC-MCH-01 | ✅ ผ่าน [รายงาน Machine](test-reports/2026-09-26-machine.md) |
+| REQ-MCH-02 | 04 §2 | `machines` (5 คอลัมน์) | `features/machine/schema.ts` | TC-MCH-02 | ✅ ผ่าน [รายงาน Machine](test-reports/2026-09-26-machine.md) |
+| REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | ✅ ผ่าน (M5: UNIQUE ใน DB) |
+| REQ-MCH-04 | 02 §4 | enum `machine_status` | `features/machine/schema.ts` (`MACHINE_STATUSES`) | TC-MCH-04 | ✅ ผ่าน (unit + M11) |
+| REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | 🟡 Soft Delete ผ่าน (M15) — BR-05 รอทดสอบกับ Alarm จริง |
 | REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | 🟡 ผ่าน INSERT (T5) — ทดสอบ UPDATE เมื่อมีข้อมูล |
 | REQ-ALM-01 | 02 §5.1 | `alarms` | `features/alarm/actions.ts` → `createAlarm` | TC-ALM-01 | รอ implement |
 | REQ-ALM-02 | 02 §4 | enum `alarm_status` | `alarm/rules.ts` → `allowedAlarmTransition` | TC-ALM-02 | รอ implement |
@@ -39,7 +39,7 @@
 | REQ-MNT-03 | 02 §4 | enum `mnt_status` (มี `Waiting Part`) | `maintenance/rules.ts` | TC-MNT-03 | รอ implement |
 | REQ-MNT-04 | 04 §3 (BR-04) | `mnt_done_requires_action` | `maintenance/actions.ts` | TC-MNT-04 | รอ implement |
 | REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` | TC-MNT-05 | รอ implement |
-| REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | รอ implement |
+| REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | ✅ ผ่าน (M8–M10) |
 | REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | รอ implement |
 | REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` | TC-SRC-03 | รอ implement |
 | REQ-DSH-01 | 04 §6 | query `group by status` | `dashboard/queries.ts` | TC-DSH-01 | รอ implement |
@@ -47,9 +47,9 @@
 | REQ-DSH-03 | 04 §6 | `idx_alarms_open`, `idx_mnt_status` | `dashboard/queries.ts` | TC-DSH-03 | รอ implement |
 | REQ-DSH-04 | 04 §6 | `idx_alarms_occurred` | `dashboard/AlarmTrendChart.tsx` | TC-DSH-04 | รอ implement |
 | REQ-DSH-05 | 04 §6 | `idx_alarms_occurred` | `dashboard/RecentAlarms.tsx` | TC-DSH-05 | รอ implement |
-| REQ-VAL-01 | 03 §5.3 | `check btrim(...) <> ''` ทุกตาราง | `features/*/schema.ts` (zod) | TC-VAL-01 | รอ implement |
-| REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | รอ implement |
-| REQ-VAL-03 | 03 §5.3 | — | `ActionResult.field` + `FormError.tsx` | TC-VAL-03 | รอ implement |
+| REQ-VAL-01 | 03 §5.3 | `check btrim(...) <> ''` ทุกตาราง | `features/*/schema.ts` (zod) | TC-VAL-01 | ✅ ผ่าน (M3 + unit) |
+| REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | ✅ ผ่าน (M4, M5, M7 + unit) |
+| REQ-VAL-03 | 03 §5.3 | — | `lib/action-result.ts`, `components/station/ui.tsx` | TC-VAL-03 | ✅ ผ่าน (M3, M5, M6) |
 | REQ-VAL-04 | 04 §3 (BR-08) | trigger `trg_alarms_check_occurred_at` | `alarm/schema.ts` + trigger | TC-VAL-04 | รอ implement |
 | REQ-SEC-01 | 02 §7 (TB-4) | — | `proxy.ts` | TC-SEC-01 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
 | REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `proxy.ts` + `requireAdmin()` | TC-SEC-02 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
@@ -84,7 +84,7 @@
 | NFR-PERF-02 | 03 §3.1 | ตรวจว่า query มี `limit`/`range` และ filter ทำฝั่ง server | TC-NFR-02 | รอ implement |
 | NFR-SEC-01 | 02 §7, ADR-002 | ปิด guard ใน Server Action ชั่วคราวแล้วต้องยังถูก RLS ปฏิเสธ | TC-NFR-03 | รอ implement |
 | NFR-INT-01 | ADR-003 | เรียก Data API ตรงด้วยข้อมูลผิดกฎ แล้วต้องถูก Constraint ปฏิเสธ | TC-NFR-04 | ✅ ผ่าน (T6: Foreign Key ปฏิเสธผ่าน API ตรง) |
-| NFR-USE-01 | 03 §5.3 | ส่งฟอร์มที่ข้อมูลผิด แล้วตรวจว่าค่าที่กรอกยังอยู่และมี error ใต้ช่อง | TC-NFR-05 | รอ implement |
+| NFR-USE-01 | 03 §5.3 | ส่งฟอร์มที่ข้อมูลผิด แล้วตรวจว่าค่าที่กรอกยังอยู่และมี error ใต้ช่อง | TC-NFR-05 | ✅ ผ่าน (M6 หลังแก้บั๊ก select) |
 | NFR-AVAIL-01 | 02 §6 | จำลอง DB error แล้วตรวจว่าแสดง Error State ไม่ใช่หน้าว่าง | TC-NFR-06 | รอ implement |
 | NFR-MAINT-01 | ADR-003, 02 §11 | เพิ่มค่าสถานะ 1 ค่า แล้วนับจำนวนไฟล์ที่ต้องแก้ (≤3) | TC-NFR-07 | รอ implement |
 | NFR-OBS-01 | ADR-005 | ทำ mutation สำคัญแล้วตรวจว่ามีแถวใน `audit_logs` | TC-NFR-08 | รอ implement |
