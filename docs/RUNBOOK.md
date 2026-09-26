@@ -35,7 +35,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `components/station/` | ชิ้นส่วนหน้าจอ: `group-box` (กรอบมีหัวข้อ), `status-pill` (ป้ายสถานะ), `shift-clock` (กะ + นาฬิกา), `top-nav` (เมนูบน), `page-title` |
 | `lib/shift.ts` | คำนวณกะเช้า/บ่าย/ดึกจากชั่วโมง (มี unit test) |
 | `features/machine/` | Module เครื่องจักร: `schema.ts` (กฎตรวจข้อมูล), `rules.ts` (กฎธุรกิจ), `queries.ts` (อ่าน), `actions.ts` (เพิ่ม/แก้/ลบ), `components/` (ฟอร์ม, ปุ่มลบ) |
-| `features/audit/write.ts` | จุดเดียวที่เขียน Audit Log (ADR-005) |
+| `features/audit/` | `write.ts` จุดเดียวที่เขียน Audit Log (ADR-005), `queries.ts` + `format.ts` สำหรับหน้า `/audit` (Admin เท่านั้น) |
 | `lib/action-result.ts` | รูปแบบผลลัพธ์ของ Server Action + แปลง error ฐานข้อมูลเป็นข้อความไทย |
 | `lib/format.ts` | แสดง/รับวันเวลาแบบเวลาไทยเสมอ — **ห้ามใช้ `toLocaleString()` ตรง ๆ** เพราะ server ของ Vercel เป็นเวลา UTC |
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
@@ -115,6 +115,7 @@ npm run dev     # เปิด http://localhost:3000
 | `005_maintenance_integrity.sql` | trigger คุมใบงานซ่อม (สถานะตามลำดับ, Done แก้ไม่ได้, Alarm ต้องเป็นของเครื่องเดียวกัน, ช่างต้องเป็น admin/technician) + ถอนสิทธิ์ลบ | ✅ 26 ก.ย. 2569 |
 | `006_dashboard_views.sql` | view นับ Alarm ต่อวัน/ต่อรหัส และเวลาซ่อม (ใช้กับกราฟและ MTTR) | ✅ 26 ก.ย. 2569 |
 | `007_profiles_column_grants.sql` | ให้แก้ตาราง profiles ได้เฉพาะคอลัมน์ `role` (ปิดการแก้ชื่อ/วันที่/id ผ่าน API) | ✅ 26 ก.ย. 2569 |
+| `008_audit_integrity.sql` | Audit Log ปลอม Role/เวลาไม่ได้ และแก้/ลบไม่ได้ (append-only) | ✅ 26 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
 
@@ -170,6 +171,8 @@ npm run dev     # เปิด http://localhost:3000
 | เปลี่ยน Role แล้วผู้ใช้คนนั้น**ยังเห็นเมนูเดิม** | — | สิทธิ์มีผลทันทีที่ server แต่หน้าที่เปิดค้างไว้ยังเป็นของเดิม ให้ผู้ใช้รีเฟรชหน้า (ไม่ต้อง Login ใหม่) |
 | **ไม่มี admin เหลือในระบบ** / admin ลืมรหัสผ่าน | SQL: `select full_name, role from profiles where role = 'admin';` | รีเซ็ตรหัสผ่านที่ Supabase → Authentication → Users หรือยกระดับบัญชีอื่นด้วย SQL ในข้อ 2.2 (admin เปลี่ยน Role ของตัวเองไม่ได้ จึงลดตัวเองจนไม่เหลือ admin ไม่ได้) |
 | ต้องการ**แก้ชื่อผู้ใช้** | — | หน้าเว็บแก้ได้แค่ Role (migration 007) — ผู้ดูแลแก้ใน SQL Editor: `update profiles set full_name = '...' where id = '<id>';` |
+| หน้า Audit Log มีการกระทำเป็น**รหัสภาษาอังกฤษ** (เช่น `machine.archive`) แทนข้อความไทย | `features/audit/format.ts` | เป็น action ใหม่ที่ยังไม่ได้เพิ่มคำแปล — เพิ่มใน `ACTION_LABEL` (ข้อมูลไม่ได้ผิด) |
+| ต้องการ**ลบ Audit Log** | — | ระบบตั้งใจไม่ให้ลบผ่านเว็บ/API (หลักฐานต้องไม่หาย) — ถ้าจำเป็นจริง (เช่น ล้างข้อมูลทดสอบ) ผู้ดูแลลบใน SQL Editor แล้วบันทึกเหตุผล |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -247,6 +250,7 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | `lib/auth/roles.ts` → `safeNextPath` | กัน Open Redirect | ปฏิเสธ URL ภายนอกทุกรูปแบบ |
 | `supabase/migrations/002_staff_directory.sql` | view ข้าม RLS ของ profiles โดยตั้งใจ | เลือกแค่ id, full_name, role / ไม่ให้ anon |
 | `supabase/migrations/003–004` | trigger คุมความถูกต้องของ Alarm | ครอบคลุมทั้ง INSERT และ UPDATE / ผู้บันทึก-ผู้ปิดมาจาก `auth.uid()` |
+| `supabase/migrations/008`, `features/audit/` | ความน่าเชื่อถือของหลักฐาน | trigger เขียนทับ Role/เวลาทุกครั้งที่มี token, ไม่มีสิทธิ์ UPDATE/DELETE, หน้า `/audit` เรียก `requireAdmin()` |
 | `features/users/actions.ts`, `supabase/migrations/007` | เปลี่ยนสิทธิ์ของผู้ใช้ | เรียก `authorizeAction(isAdmin)` ก่อนทุกอย่าง, ห้ามแก้ตัวเอง, สิทธิ์คอลัมน์เหลือแค่ `role`, มี Audit Log ทุกครั้ง |
 | `supabase/migrations/005` | trigger คุมความถูกต้องของใบงานซ่อม | ลำดับสถานะตรงกับ `features/maintenance/rules.ts`, ตรวจช่างผ่าน `staff_directory`, ผู้เปิดมาจาก `auth.uid()` |
 | Environment Variables ใน Vercel | ความลับ | ไม่มี Secret key หลุดไปอยู่ในตัวแปรที่ขึ้นต้น `NEXT_PUBLIC_` |
@@ -266,3 +270,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่มหน้าภาพรวม (Dashboard), migration 006, library `recharts` + `react-is` (peer ของ recharts ล็อกเวอร์ชันให้ตรงกับ `react`) |
 | 26 ก.ย. 2569 | เพิ่มหน้าผู้ใช้งาน (เปลี่ยน Role), migration 007, วิธีแก้กรณีไม่มี admin / แก้ชื่อผู้ใช้ |
 | 26 ก.ย. 2569 | เพิ่มข้อ 2.7 ข้อมูลสาธิต Alarm ย้อนหลัง และวิธีลบ |
+| 26 ก.ย. 2569 | เพิ่มหน้า Audit Log (`/audit`), migration 008, ADR-005 Revision 2 |

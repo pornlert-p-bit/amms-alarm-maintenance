@@ -585,3 +585,32 @@ revoke insert, update on public.profiles from authenticated;
 
 -- ให้แก้ได้คอลัมน์เดียว
 grant update (role) on public.profiles to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 15. AUDIT INTEGRITY (เพิ่มใน migration 008 — ดู supabase/migrations/008_audit_integrity.sql)
+-- ---------------------------------------------------------------------
+
+create or replace function public.enforce_audit_insert()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  -- มี token (มาจากหน้าเว็บ) → ใช้ Role และเวลาจริงเสมอ
+  -- ไม่มี token (service role / SQL Editor ของผู้ดูแล) → ใช้ค่าที่ส่งมา
+  if auth.uid() is not null then
+    new.actor_role := current_role_name();
+    new.created_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_audit_enforce_insert on public.audit_logs;
+create trigger trg_audit_enforce_insert
+  before insert on public.audit_logs
+  for each row execute function public.enforce_audit_insert();
+
+revoke all on function public.enforce_audit_insert() from public, anon, authenticated;
+
+revoke update, delete on public.audit_logs from authenticated;
