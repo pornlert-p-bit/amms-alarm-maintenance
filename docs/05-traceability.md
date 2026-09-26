@@ -20,8 +20,8 @@
 | REQ-AUTH-02 | 03 §4 | — | `lib/auth/actions.ts`, `proxy.ts` | TC-AUTH-02 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
 | REQ-AUTH-03 | 02 §3.1 | enum `user_role` | `lib/auth/roles.ts` | TC-AUTH-03 | ✅ ผ่าน (unit + [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md)) |
 | REQ-AUTH-04 | 04 §2.1 | trigger `handle_new_user` | `supabase/schema.sql` §4.4 | TC-AUTH-04 | ✅ ผ่าน (สร้างบัญชีจริง 3 บัญชี) |
-| REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/audit`, `users/actions.ts` | TC-AUTH-05 | 🟡 ผ่านระดับ RLS (A3) — หน้า UI ยังไม่ทำ |
-| REQ-AUTH-06 | 04 §4 (BR-07) | RLS `profiles_admin_update_others` (`id <> auth.uid()`) | `users/actions.ts` + RLS | TC-AUTH-06 | ✅ ผ่านระดับ RLS (A2, T4, V4) — หน้า UI ยังไม่ทำ |
+| REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/users/actions.ts` → `changeUserRole` + migration 007 | TC-AUTH-05 | ✅ ผ่าน (A3 + W3–W7 + G1–G7) [รายงานผู้ใช้งาน](test-reports/2026-09-26-users.md) |
+| REQ-AUTH-06 | 04 §4 (BR-07) | RLS `profiles_admin_update_others` (`id <> auth.uid()`) | `users/rules.ts` → `checkRoleChange` + RLS | TC-AUTH-06 | ✅ ผ่าน (A2, T4, V4 + W2, G6 + unit) |
 | REQ-MCH-01 | 02 §3.1 | `machines` | `features/machine/actions.ts`, `app/(app)/machines/` | TC-MCH-01 | ✅ ผ่าน [รายงาน Machine](test-reports/2026-09-26-machine.md) |
 | REQ-MCH-02 | 04 §2 | `machines` (5 คอลัมน์) | `features/machine/schema.ts` | TC-MCH-02 | ✅ ผ่าน [รายงาน Machine](test-reports/2026-09-26-machine.md) |
 | REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | ✅ ผ่าน (M5: UNIQUE ใน DB) |

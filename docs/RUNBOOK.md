@@ -41,6 +41,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
 | `features/maintenance/` | Module งานซ่อมบำรุง: กฎลำดับสถานะ (`rules.ts`), อ่านข้อมูลบอร์ด (`queries.ts`), เปิด/เปลี่ยนสถานะ/แก้ใบงาน (`actions.ts`), `components/` (ฟอร์ม, การ์ดบนบอร์ด, ปุ่มสถานะ) |
 | `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (ช่องตัวเลข, ผังเครื่อง, กราฟ recharts) |
+| `features/users/` | หน้าผู้ใช้งาน: กฎเปลี่ยน Role (`rules.ts`), รายชื่อ (`queries.ts`), เปลี่ยน Role + Audit Log (`actions.ts`) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
 | `supabase/migrations/` | ไฟล์แก้ฐานข้อมูลที่ต้องรันตามลำดับกับ project ที่ใช้งานอยู่แล้ว (ดูข้อ 2.6) |
 | `app/(auth)/login/` | หน้า Login |
@@ -63,7 +64,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 ### 2.2 สร้างบัญชีผู้ใช้และกำหนด Role
 1. **Authentication → Users → Add user → Create new user** ใส่อีเมล + รหัสผ่าน และ **ติ๊ก Auto Confirm User**
 2. ระบบจะสร้างโปรไฟล์ให้อัตโนมัติด้วย Role `viewer` (สิทธิ์ต่ำสุด — ตั้งใจให้เป็นแบบนี้)
-3. ยกระดับ Role ใน **SQL Editor** (แก้อีเมลให้ตรง):
+3. ยกระดับ Role ที่หน้า **ผู้ใช้งาน** (`/users`) ด้วยบัญชี admin — หรือถ้ายังไม่มี admin เลย (ติดตั้งครั้งแรก) ใช้ **SQL Editor** (แก้อีเมลให้ตรง):
    ```sql
    update profiles set role = 'admin'
     where id = (select id from auth.users where email = 'admin@amms-demo.test');
@@ -112,6 +113,7 @@ npm run dev     # เปิด http://localhost:3000
 | `004_alarm_insert_integrity.sql` | trigger บังคับ Alarm ใหม่เริ่มที่ Open และผู้บันทึกจาก token (ตอนสร้าง) | ✅ 26 ก.ย. 2569 |
 | `005_maintenance_integrity.sql` | trigger คุมใบงานซ่อม (สถานะตามลำดับ, Done แก้ไม่ได้, Alarm ต้องเป็นของเครื่องเดียวกัน, ช่างต้องเป็น admin/technician) + ถอนสิทธิ์ลบ | ✅ 26 ก.ย. 2569 |
 | `006_dashboard_views.sql` | view นับ Alarm ต่อวัน/ต่อรหัส และเวลาซ่อม (ใช้กับกราฟและ MTTR) | ✅ 26 ก.ย. 2569 |
+| `007_profiles_column_grants.sql` | ให้แก้ตาราง profiles ได้เฉพาะคอลัมน์ `role` (ปิดการแก้ชื่อ/วันที่/id ผ่าน API) | ✅ 26 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
 
@@ -157,6 +159,9 @@ npm run dev     # เปิด http://localhost:3000
 | ต้องการ**ลบใบงานซ่อมที่เปิดผิด** | — | เหมือน Alarm — ไม่มีสิทธิ์ลบผ่านเว็บ/API ผู้ดูแลลบใน SQL Editor: `delete from maintenance_records where id = '<id>' returning *;` |
 | หน้าภาพรวมขึ้น **"ยังแสดงกราฟไม่ได้ — ตรวจว่ารัน migration 006"** / MTTR เป็น "—" | SQL: `select * from dashboard_alarm_code_daily limit 5;` | ถ้า error ว่าไม่มี view ให้รัน migration 006 — ถ้า MTTR เป็น "—" แต่ view มีอยู่ แปลว่าช่วงนั้นยังไม่มี Alarm ที่ปิด (ถูกต้อง) |
 | ตัวเลขบนหน้าภาพรวม**ไม่อัปเดต**หลังแก้ข้อมูลใน SQL Editor | — | หน้านี้อ่านใหม่ทุกครั้งที่เปิด ให้กดรีเฟรช (v1 ไม่มี Realtime — 02 §9) |
+| เปลี่ยน Role แล้วผู้ใช้คนนั้น**ยังเห็นเมนูเดิม** | — | สิทธิ์มีผลทันทีที่ server แต่หน้าที่เปิดค้างไว้ยังเป็นของเดิม ให้ผู้ใช้รีเฟรชหน้า (ไม่ต้อง Login ใหม่) |
+| **ไม่มี admin เหลือในระบบ** / admin ลืมรหัสผ่าน | SQL: `select full_name, role from profiles where role = 'admin';` | รีเซ็ตรหัสผ่านที่ Supabase → Authentication → Users หรือยกระดับบัญชีอื่นด้วย SQL ในข้อ 2.2 (admin เปลี่ยน Role ของตัวเองไม่ได้ จึงลดตัวเองจนไม่เหลือ admin ไม่ได้) |
+| ต้องการ**แก้ชื่อผู้ใช้** | — | หน้าเว็บแก้ได้แค่ Role (migration 007) — ผู้ดูแลแก้ใน SQL Editor: `update profiles set full_name = '...' where id = '<id>';` |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -234,6 +239,7 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | `lib/auth/roles.ts` → `safeNextPath` | กัน Open Redirect | ปฏิเสธ URL ภายนอกทุกรูปแบบ |
 | `supabase/migrations/002_staff_directory.sql` | view ข้าม RLS ของ profiles โดยตั้งใจ | เลือกแค่ id, full_name, role / ไม่ให้ anon |
 | `supabase/migrations/003–004` | trigger คุมความถูกต้องของ Alarm | ครอบคลุมทั้ง INSERT และ UPDATE / ผู้บันทึก-ผู้ปิดมาจาก `auth.uid()` |
+| `features/users/actions.ts`, `supabase/migrations/007` | เปลี่ยนสิทธิ์ของผู้ใช้ | เรียก `authorizeAction(isAdmin)` ก่อนทุกอย่าง, ห้ามแก้ตัวเอง, สิทธิ์คอลัมน์เหลือแค่ `role`, มี Audit Log ทุกครั้ง |
 | `supabase/migrations/005` | trigger คุมความถูกต้องของใบงานซ่อม | ลำดับสถานะตรงกับ `features/maintenance/rules.ts`, ตรวจช่างผ่าน `staff_directory`, ผู้เปิดมาจาก `auth.uid()` |
 | Environment Variables ใน Vercel | ความลับ | ไม่มี Secret key หลุดไปอยู่ในตัวแปรที่ขึ้นต้น `NEXT_PUBLIC_` |
 
@@ -250,3 +256,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่ม Module Alarm, migration 002–004, หัวข้อ 2.6 การรัน migration, รายการ review ของ trigger |
 | 26 ก.ย. 2569 | เพิ่ม Module งานซ่อมบำรุง (บอร์ด Kanban), migration 005, ปัญหาที่พบบ่อยของใบงานซ่อม |
 | 26 ก.ย. 2569 | เพิ่มหน้าภาพรวม (Dashboard), migration 006, library `recharts` + `react-is` (peer ของ recharts ล็อกเวอร์ชันให้ตรงกับ `react`) |
+| 26 ก.ย. 2569 | เพิ่มหน้าผู้ใช้งาน (เปลี่ยน Role), migration 007, วิธีแก้กรณีไม่มี admin / แก้ชื่อผู้ใช้ |
