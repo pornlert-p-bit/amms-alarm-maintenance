@@ -68,12 +68,12 @@
 |---|---|---|---|---|---|
 | REQ-BON-01 | 02 §3.1 | enum `user_role` = `viewer` | `lib/auth/dal.ts`, `components/station/top-nav.tsx` | TC-BON-01 | ✅ ผ่านระดับ RLS (V2, V3) |
 | REQ-BON-02 | 04 §6 | view `dashboard_alarm_code_daily` | `charts.tsx` → `ParetoChart` + `metrics.ts` → `pareto` | TC-BON-02 | ✅ ผ่าน (D9 + unit) — ทำเป็น Pareto แทน Top 5 |
-| REQ-BON-03 | 02 §3.1, ADR-004 | `machine_status_history` | `machines/[id]/history/page.tsx` | TC-BON-03 | รอ implement |
+| REQ-BON-03 | 02 §3.1, ADR-004 | `machine_status_history`, `alarms`, `maintenance_records` | `app/(app)/machines/[id]/page.tsx` + `features/machine/timeline.ts` | TC-BON-03 | ✅ ผ่าน (H1–H9 + unit) [รายงาน Machine History](test-reports/2026-09-26-machine-history.md) |
 | REQ-BON-04 | 03 §4 | — | `app/api/export/alarms/route.ts` | TC-BON-04 | รอ implement |
 | REQ-BON-05 | ADR-005 (+ Revision 2) | `audit_logs` + RLS admin only + trigger `trg_audit_enforce_insert` (migration 008) | `app/(app)/audit/page.tsx`, `features/audit/` | TC-BON-05 | ✅ ผ่าน (P7 + L1–L10 + Q1–Q4) [รายงาน Audit Log](test-reports/2026-09-26-audit.md) |
 | REQ-BON-06 | 03 §3.2 | — | `ThemeToggle.tsx`, Tailwind breakpoints | TC-BON-06 | รอ implement |
 | REQ-BON-07 | 02 §4 | enum `mnt_status` = `Waiting Part` | `maintenance/rules.ts` | TC-BON-07 | รอ implement |
-| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | ✅ ผ่าน (Alarm A11 + งานซ่อม W11) |
+| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | ✅ ผ่าน (Alarm A11 + งานซ่อม W11 + ประวัติเครื่อง H6 + Audit Log L7) |
 | REQ-BON-09 | ADR-004 | `alarms.event_id`, `machines.last_seen_at`, `status_source` | `features/integration/*`, `api/plc/status` | TC-BON-09 | รอ implement |
 
 ## 3. Non-functional Requirements
