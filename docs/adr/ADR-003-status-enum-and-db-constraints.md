@@ -55,3 +55,28 @@
 - เพิ่มค่าสถานะใหม่ต้องรัน `alter type ... add value` เป็น migration และรันแยก transaction จากการใช้ค่านั้น
 - ข้อความ error จาก Constraint ของฐานข้อมูลอ่านไม่รู้เรื่องสำหรับผู้ใช้ → **Server Action ต้อง map ชื่อ Constraint เป็นข้อความภาษาไทยและระบุ field** (ผูกกับ Error Contract ใน [03-architecture.md](../03-architecture.md) §5.3)
 - กฎถูกเขียน 2–3 ที่ ต้องแก้ให้ตรงกันเมื่อเปลี่ยน — ยอมรับเพราะแลกกับความถูกต้องของข้อมูล และ NFR-MAINT-01 จำกัดให้ไม่เกิน 3 จุด
+
+---
+
+## Revision — 26 กันยายน 2569 (พบระหว่างทดสอบ Module Alarm)
+
+**เปลี่ยน Decision ข้อ 3:** กฎลำดับสถานะของ Alarm **ถูกบังคับในฐานข้อมูลด้วย** ผ่าน trigger `trg_alarms_enforce_update` (migration 003)
+
+**สิ่งที่พบ:** RLS policy `alarms_staff_update` ให้ staff UPDATE ตาราง `alarms` ได้ทุกคอลัมน์ ถ้าข้าม Server Action ไปเรียก Supabase Data API ตรงด้วย token ของตัวเอง technician จะ
+1. ย้อนสถานะจาก Closed กลับเป็น Open ได้ (ขัด BR-02 / REQ-ALM-05)
+2. ใส่ `closed_by` เป็นคนอื่นได้ คือปลอมว่าใครเป็นผู้ปิด (ขัด REQ-ALM-04)
+3. แก้ `created_by` / `machine_id` ของ Alarm ที่บันทึกไปแล้วได้
+
+แปลว่ากฎเหล่านี้มีด่านเดียว ขัดกับ NFR-SEC-01 ที่กำหนดว่า Authorization ต้องมีอย่างน้อย 2 ชั้น
+
+**เหตุผลที่เปลี่ยนใจ:** ในตอนแรกเหตุผลที่ไม่ใส่ในฐานข้อมูลคือ "debug ยาก" ซึ่งเป็นเรื่องความสะดวก แต่ช่องโหว่ข้างบนเป็นเรื่องความถูกต้องของข้อมูลและ accountability ตาม Decision Framework ต้องให้น้ำหนักกับเรื่องหลังมากกว่า
+
+**สิ่งที่ trigger ทำ:**
+- ห้ามแก้ Alarm ที่ Closed แล้วทุกกรณี
+- ห้ามเปลี่ยน `machine_id`, `created_by`, `event_id`
+- อนุญาตเฉพาะ Open → In Progress, Open → Closed, In Progress → Closed
+- **เขียน `closed_by = auth.uid()` และ `closed_at = now()` เองเสมอ** — ค่าที่ client ส่งมาจะถูกเขียนทับ
+
+**สิ่งที่ยังเหมือนเดิม:** `rules.ts` ยังเป็นที่ที่ UI ใช้ตัดสินว่าจะแสดงปุ่มอะไร และเป็นที่ที่ unit test ตรวจกฎ — ทั้งสองที่ต้องแก้ให้ตรงกันถ้าเปลี่ยน State Machine
+
+**ผลกระทบต่อ v2 (PLC):** Gateway ที่ปิด Alarm อัตโนมัติด้วย service role จะไม่มี `auth.uid()` ทำให้ `closed_by` เป็น null และชน CHECK `alarms_closed_requires_cause` — ถ้าจะให้ PLC ปิด Alarm ได้ ต้องเพิ่มบัญชีระบบ (system user) สำหรับ Gateway
