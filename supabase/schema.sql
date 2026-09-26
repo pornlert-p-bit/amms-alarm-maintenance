@@ -575,3 +575,13 @@ revoke all on public.dashboard_alarm_code_daily   from public, anon;
 revoke all on public.dashboard_alarm_repair_daily from public, anon;
 grant select on public.dashboard_alarm_code_daily   to authenticated;
 grant select on public.dashboard_alarm_repair_daily to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 14. PROFILES COLUMN GRANTS (เพิ่มใน migration 007 — ดู supabase/migrations/007_profiles_column_grants.sql)
+-- ---------------------------------------------------------------------
+
+-- ถอนสิทธิ์ระดับตาราง (INSERT ไม่มี policy อยู่แล้ว — ถอนเพื่อให้สิทธิ์น้อยที่สุดตาม ADR-006)
+revoke insert, update on public.profiles from authenticated;
+
+-- ให้แก้ได้คอลัมน์เดียว
+grant update (role) on public.profiles to authenticated;
