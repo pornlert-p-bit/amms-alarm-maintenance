@@ -8,7 +8,7 @@ import type { FloorMachine } from "../queries";
 /**
  * ผังเครื่องจักรแยกตามไลน์ผลิต (location) — แบบหน้าจอ HMI ของห้องควบคุม
  * แถบซ้ายของแต่ละเครื่องมีสีเฉพาะเครื่องที่ผิดปกติ (ALARM แดง / MAINT ส้ม)
- * คลิกเครื่อง → รายการ Alarm ของเครื่องนั้น
+ * คลิกเครื่อง → หน้าประวัติของเครื่องนั้น (Machine History)
  */
 const EDGE: Record<MachineStatus, string> = {
   Running: "border-l-line-strong bg-white",
@@ -34,8 +34,8 @@ export function PlantFloor({ lines }: { lines: { location: string; machines: Flo
             {machines.map((m) => (
               <li key={m.id}>
                 <Link
-                  href={`/alarms?machine=${m.id}`}
-                  title={`${m.machine_id} · ${m.machine_name} — ดู Alarm ของเครื่องนี้`}
+                  href={`/machines/${m.id}`}
+                  title={`${m.machine_id} · ${m.machine_name} — ดูประวัติเครื่อง`}
                   className={`block rounded-[3px] border border-l-[4px] border-line-strong px-2.5 py-2 transition-colors hover:border-accent ${EDGE[m.status]}`}
                 >
                   <div className="flex items-center justify-between gap-1.5">

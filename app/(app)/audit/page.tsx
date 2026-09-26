@@ -31,7 +31,7 @@ function entityHref(r: AuditRow): string | null {
   if (!r.entity_id || !r.entityLabel) return null; // หาไม่เจอ = ถูกลบไปแล้ว ไม่ต้องทำลิงก์ที่เปิดแล้วเจอ "ไม่พบ"
   if (r.entity_type === "alarm") return `/alarms/${r.entity_id}`;
   if (r.entity_type === "maintenance") return `/maintenance/${r.entity_id}`;
-  if (r.entity_type === "machine" && r.action !== "machine.soft_delete") return `/machines/${r.entity_id}/edit`;
+  if (r.entity_type === "machine") return `/machines/${r.entity_id}`; // หน้าประวัติเปิดได้แม้เครื่องถูกลบแล้ว
   return null;
 }
 
