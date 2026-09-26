@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { GroupBox } from "@/components/station/group-box";
+
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "เข้าสู่ระบบ" };
@@ -11,25 +13,23 @@ export default async function LoginPage({ searchParams }: Props) {
   const { next } = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 text-lg font-bold text-amber-400">
-            A
-          </div>
-          <h1 className="text-xl font-semibold">AMMS</h1>
-          <p className="mt-1 text-sm text-slate-500">Alarm &amp; Maintenance Management System</p>
-        </div>
+    <div className="flex min-h-screen flex-col">
+      <header className="flex h-[52px] items-center gap-2 bg-top px-5 text-white">
+        <span className="text-base font-bold tracking-tight">AMMS</span>
+        <span className="text-[11px] text-top-ink">Alarm &amp; Maintenance Management System</span>
+      </header>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          {/* ส่ง next ต่อให้ฟอร์มเป็น hidden input — server จะตรวจความปลอดภัยของค่านี้อีกครั้ง */}
-          <LoginForm next={next ?? ""} />
+      <main className="flex flex-1 items-start justify-center px-4 pt-[12vh]">
+        <div className="w-full max-w-sm">
+          <GroupBox title="เข้าสู่ระบบ">
+            {/* ส่ง next ต่อให้ฟอร์มเป็น hidden input — server จะตรวจความปลอดภัยของค่านี้อีกครั้ง */}
+            <LoginForm next={next ?? ""} />
+          </GroupBox>
+          <p className="mt-4 text-center text-xs text-muted">
+            ยังไม่มีบัญชี? ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์เข้าใช้งาน
+          </p>
         </div>
-
-        <p className="mt-4 text-center text-xs text-slate-500">
-          ยังไม่มีบัญชี? ติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์เข้าใช้งาน
-        </p>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

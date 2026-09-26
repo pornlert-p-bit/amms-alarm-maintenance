@@ -1,27 +1,29 @@
 import type { Metadata } from "next";
 
+import { GroupBox } from "@/components/station/group-box";
+import { PageTitle } from "@/components/station/page-title";
 import { requireUser } from "@/lib/auth/dal";
-import { ROLE_LABEL } from "@/lib/auth/roles";
 
-export const metadata: Metadata = { title: "แดชบอร์ด" };
+export const metadata: Metadata = { title: "ภาพรวม" };
 
 export default async function DashboardPage() {
   const user = await requireUser(); // ด่านที่ 2: ต้อง Login และมีโปรไฟล์
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">แดชบอร์ด</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          ยินดีต้อนรับ {user.fullName} — สิทธิ์ของคุณ: {ROLE_LABEL[user.role]}
-        </p>
-      </div>
+    <>
+      <PageTitle title="ภาพรวมโรงงาน" sub={`ยินดีต้อนรับ ${user.fullName}`} />
 
-      <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-        <p className="text-sm text-slate-500">
-          การ์ดสรุปสถานะเครื่องจักร, จำนวน Alarm/งานซ่อมค้าง และกราฟ — กำหนดเสร็จ จ. 28 ก.ย.
-        </p>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <GroupBox title="สถานะเครื่องจักร">
+          <p className="text-muted">ผังเครื่องจักรแยกตามไลน์ผลิต — กำหนดเสร็จ จ. 28 ก.ย.</p>
+        </GroupBox>
+        <GroupBox title="Alarm ล่าสุด">
+          <p className="text-muted">รายการ Alarm ที่ยังไม่ปิด — กำหนดเสร็จ อา. 27 ก.ย.</p>
+        </GroupBox>
+        <GroupBox title="ตัวชี้วัด" className="lg:col-span-2">
+          <p className="text-muted">MTTR, จำนวน Alarm ค้าง, งานซ่อมค้าง และกราฟ Pareto — กำหนดเสร็จ จ. 28 ก.ย.</p>
+        </GroupBox>
       </div>
-    </div>
+    </>
   );
 }

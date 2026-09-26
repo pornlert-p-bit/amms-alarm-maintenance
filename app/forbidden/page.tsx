@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { GroupBox } from "@/components/station/group-box";
 import { signOut } from "@/lib/auth/actions";
 
 export const metadata: Metadata = { title: "ไม่มีสิทธิ์เข้าถึง" };
@@ -16,29 +17,40 @@ export default async function ForbiddenPage({ searchParams }: Props) {
   const noProfile = reason === "no-profile";
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
-        <h1 className="text-lg font-semibold">
-          {noProfile ? "บัญชีนี้ยังไม่พร้อมใช้งาน" : "ไม่มีสิทธิ์เข้าถึงหน้านี้"}
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          {noProfile
-            ? "บัญชีของคุณยังไม่มีข้อมูลโปรไฟล์ในระบบ กรุณาแจ้งผู้ดูแลระบบ"
-            : "หน้านี้สงวนไว้สำหรับผู้ใช้ที่มีสิทธิ์สูงกว่า หากต้องการใช้งานกรุณาติดต่อผู้ดูแลระบบ"}
-        </p>
-        <div className="mt-6 flex justify-center gap-2">
-          {!noProfile && (
-            <Link href="/dashboard" className="rounded-md bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800">
-              กลับแดชบอร์ด
-            </Link>
-          )}
-          <form action={signOut}>
-            <button type="submit" className="rounded-md border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50">
-              ออกจากระบบ
-            </button>
-          </form>
+    <div className="flex min-h-screen flex-col">
+      <header className="flex h-[52px] items-center bg-top px-5 text-white">
+        <span className="text-base font-bold tracking-tight">AMMS</span>
+      </header>
+
+      <main className="flex flex-1 items-start justify-center px-4 pt-[12vh]">
+        <div className="w-full max-w-md">
+          <GroupBox title={noProfile ? "บัญชียังไม่พร้อมใช้งาน" : "ไม่มีสิทธิ์เข้าถึง"}>
+            <p className="text-ink-2">
+              {noProfile
+                ? "บัญชีของคุณยังไม่มีข้อมูลโปรไฟล์ในระบบ กรุณาแจ้งผู้ดูแลระบบ"
+                : "หน้านี้สงวนไว้สำหรับผู้ใช้ที่มีสิทธิ์สูงกว่า หากต้องการใช้งานกรุณาติดต่อผู้ดูแลระบบ"}
+            </p>
+            <div className="mt-5 flex gap-2">
+              {!noProfile && (
+                <Link
+                  href="/dashboard"
+                  className="rounded-[3px] bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                >
+                  กลับหน้าภาพรวม
+                </Link>
+              )}
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="rounded-[3px] border border-line-strong bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-panelhead"
+                >
+                  ออกจากระบบ
+                </button>
+              </form>
+            </div>
+          </GroupBox>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
