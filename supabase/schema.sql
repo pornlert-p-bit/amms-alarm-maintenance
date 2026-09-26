@@ -410,3 +410,35 @@ create trigger trg_alarms_enforce_update
 
 -- ห้ามผู้ใช้ทั่วไปเรียกฟังก์ชันนี้ตรง ๆ (ทำงานผ่าน trigger เท่านั้น)
 revoke all on function public.enforce_alarm_update() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 11. ALARM INSERT INTEGRITY (เพิ่มใน migration 004 — ดู supabase/migrations/004_alarm_insert_integrity.sql)
+-- ---------------------------------------------------------------------
+create or replace function public.enforce_alarm_insert()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  -- Alarm ใหม่ต้องเริ่มที่ Open และยังไม่มีข้อมูลการปิด (ปิดได้ทางเดียวคือผ่านการ UPDATE ที่ migration 003 คุมอยู่)
+  new.status    := 'Open';
+  new.cause     := null;
+  new.closed_by := null;
+  new.closed_at := null;
+
+  -- ผู้บันทึกมาจาก token เสมอ ปลอมไม่ได้
+  -- ถ้าไม่มี token (ระบบอัตโนมัติที่ใช้ service role เช่น PLC Gateway ใน v2) จึงใช้ค่าที่ส่งมา
+  if auth.uid() is not null then
+    new.created_by := auth.uid();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_alarms_enforce_insert on public.alarms;
+create trigger trg_alarms_enforce_insert
+  before insert on public.alarms
+  for each row execute function public.enforce_alarm_insert();
+
+revoke all on function public.enforce_alarm_insert() from public, anon, authenticated;
