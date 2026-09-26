@@ -47,6 +47,12 @@ describe("Route access (REQ-SEC-02 / TC-SEC-02)", () => {
     expect(canAccessPath("viewer", "/users-guide")).toBe(true);
   });
 
+  it("หน้า /audit เข้าได้เฉพาะ Admin (REQ-BON-05)", () => {
+    expect(canAccessPath("admin", "/audit")).toBe(true);
+    expect(canAccessPath("technician", "/audit")).toBe(false);
+    expect(canAccessPath("viewer", "/audit/2026")).toBe(false);
+  });
+
   it("หน้าอื่นทุก Role ที่ Login แล้วเปิดได้", () => {
     expect(canAccessPath("viewer", "/dashboard")).toBe(true);
     expect(canAccessPath("technician", "/alarms")).toBe(true);
@@ -64,6 +70,8 @@ describe("Route access (REQ-SEC-02 / TC-SEC-02)", () => {
     expect(hrefs("admin")).toContain("/users");
     expect(hrefs("technician")).not.toContain("/users");
     expect(hrefs("viewer")).not.toContain("/users");
+    expect(hrefs("admin")).toContain("/audit");
+    expect(hrefs("technician")).not.toContain("/audit");
     expect(hrefs("viewer")).toContain("/dashboard");
   });
 });

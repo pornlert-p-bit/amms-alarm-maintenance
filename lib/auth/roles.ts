@@ -41,7 +41,7 @@ export function isPublicPath(pathname: string): boolean {
 }
 
 /** หน้าที่ต้องการ Role Admin เท่านั้น */
-const ADMIN_ONLY_PATHS = ["/users"];
+const ADMIN_ONLY_PATHS = ["/users", "/audit"];
 
 /**
  * ผู้ใช้ Role นี้เปิดหน้านี้ได้หรือไม่
@@ -79,6 +79,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/alarms", label: "Alarm" },
   { href: "/maintenance", label: "งานซ่อมบำรุง" },
   { href: "/users", label: "ผู้ใช้งาน" },
+  { href: "/audit", label: "Audit Log" },
 ];
 
 /** เมนูที่ Role นี้ควรเห็น */
