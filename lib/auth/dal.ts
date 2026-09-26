@@ -91,3 +91,26 @@ export async function requireAdmin(): Promise<CurrentUser> {
   if (!isAdmin(user.role)) redirect("/forbidden");
   return user;
 }
+
+/* ───────────── สำหรับ Server Action (คืนค่า error แทนการ redirect) ───────────── */
+
+type ActionAuth =
+  | { ok: true; user: CurrentUser }
+  | { ok: false; code: "UNAUTHENTICATED" | "FORBIDDEN"; message: string };
+
+/**
+ * ด่านตรวจสิทธิ์ในทุก Server Action — ต้องเรียกเป็นบรรทัดแรกของ action เสมอ
+ * (เอกสาร Next.js: action ถูกเรียกตรงได้โดยไม่ผ่านหน้าเว็บ การซ่อนปุ่มจึงไม่ใช่ความปลอดภัย)
+ *
+ * ตัวอย่าง:  const auth = await authorizeAction(isAdmin); if (!auth.ok) return auth;
+ */
+export async function authorizeAction(allowed: (role: Role) => boolean): Promise<ActionAuth> {
+  const state = await getSessionState();
+  if (state.kind !== "ok") {
+    return { ok: false, code: "UNAUTHENTICATED", message: "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่" };
+  }
+  if (!allowed(state.user.role)) {
+    return { ok: false, code: "FORBIDDEN", message: "คุณไม่มีสิทธิ์ดำเนินการนี้" };
+  }
+  return { ok: true, user: state.user };
+}
