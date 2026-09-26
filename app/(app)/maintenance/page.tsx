@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GroupBox } from "@/components/station/group-box";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { buttonClass, inputClass } from "@/components/station/ui";
 import { getMachineOptions, isUuid } from "@/features/machine/queries";
 import { KanbanCard } from "@/features/maintenance/components/kanban-card";
@@ -60,14 +60,13 @@ export default async function MaintenancePage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title="งานซ่อมบำรุง" sub="Maintenance Record" />
+      <PageHeader title="งานซ่อมบำรุง" sub="Maintenance Record">
         {staff && (
           <Link href="/maintenance/new" className={buttonClass.primary}>
             + เปิดใบงานซ่อม
           </Link>
         )}
-      </div>
+      </PageHeader>
 
       <div className="space-y-6">
         <GroupBox title="กรองรายการ">

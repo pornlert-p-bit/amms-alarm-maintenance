@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { GroupBox } from "@/components/station/group-box";
 import { MntStatusBadge } from "@/components/station/mnt-status-badge";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { buttonClass, Notice } from "@/components/station/ui";
 import { MaintenanceActions } from "@/features/maintenance/components/maintenance-actions";
 import { getMaintenanceById } from "@/features/maintenance/queries";
@@ -50,15 +50,12 @@ export default async function MaintenanceDetailPage({ params, searchParams }: Pr
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title="ใบงานซ่อม" sub={`${mnt.machine?.machine_id ?? ""} · ${mnt.machine?.machine_name ?? ""}`} />
-        <div className="flex gap-2">
-          {canAct && (
-            <Link href={`/maintenance/${mnt.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
-          )}
-          <Link href="/maintenance" className={buttonClass.secondary}>‹ กลับบอร์ด</Link>
-        </div>
-      </div>
+      <PageHeader title="ใบงานซ่อม" sub={`${mnt.machine?.machine_id ?? ""} · ${mnt.machine?.machine_name ?? ""}`}>
+        {canAct && (
+          <Link href={`/maintenance/${mnt.id}/edit`} className={buttonClass.secondary}>แก้ไขรายละเอียด</Link>
+        )}
+        <Link href="/maintenance" className={buttonClass.secondary}>‹ กลับบอร์ด</Link>
+      </PageHeader>
 
       {sp.created && <Notice tone="ok">เปิดใบงานซ่อมแล้ว</Notice>}
       {sp.updated && <Notice tone="ok">บันทึกแล้ว</Notice>}

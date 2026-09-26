@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { AlarmStatusBadge } from "@/components/station/alarm-status-badge";
 import { GroupBox } from "@/components/station/group-box";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { DailyAlarmChart, ParetoChart } from "@/features/dashboard/components/charts";
 import { KpiTile } from "@/features/dashboard/components/kpi-tile";
 import { PlantFloor } from "@/features/dashboard/components/plant-floor";
@@ -42,7 +42,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const top = data.codeDaily ? pareto(data.codeDaily, from) : null;
 
   const rangeSwitch = (
-    <nav aria-label="ช่วงเวลา" className="mb-5 flex gap-1 text-xs sm:mb-0">
+    <nav aria-label="ช่วงเวลา" className="flex gap-1 text-xs">
       {DASHBOARD_RANGES.map((r) => (
         <Link
           key={r}
@@ -59,10 +59,9 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title="ภาพรวมโรงงาน" sub={`ยินดีต้อนรับ ${user.fullName}`} />
+      <PageHeader title="ภาพรวมโรงงาน" sub={`ยินดีต้อนรับ ${user.fullName}`}>
         {rangeSwitch}
-      </div>
+      </PageHeader>
 
       <div className="space-y-6">
         <GroupBox title="สรุปสถานะ" aside={`MTTR และกราฟ: ${range} วันล่าสุด`}>
@@ -83,7 +82,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </GroupBox>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          <GroupBox title="ผังเครื่องจักร" aside="คลิกเครื่องเพื่อดู Alarm">
+          <GroupBox title="ผังเครื่องจักร" aside="คลิกเครื่องเพื่อดูประวัติ">
             <PlantFloor lines={lines} />
           </GroupBox>
 

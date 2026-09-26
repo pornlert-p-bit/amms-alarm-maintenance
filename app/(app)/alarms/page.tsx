@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { AlarmStatusBadge } from "@/components/station/alarm-status-badge";
 import { GroupBox } from "@/components/station/group-box";
-import { PageTitle } from "@/components/station/page-title";
+import { PageHeader } from "@/components/station/page-title";
 import { buttonClass, inputClass, tableClass } from "@/components/station/ui";
 import { ALARM_PAGE_SIZE, getAlarms } from "@/features/alarm/queries";
 import { ALARM_STATUS_LABEL } from "@/features/alarm/rules";
@@ -62,14 +62,13 @@ export default async function AlarmsPage({ searchParams }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle title="Alarm" sub="Alarm Record" />
+      <PageHeader title="Alarm" sub="Alarm Record">
         {staff && (
           <Link href="/alarms/new" className={buttonClass.primary}>
             + บันทึก Alarm
           </Link>
         )}
-      </div>
+      </PageHeader>
 
       <div className="space-y-6">
         <GroupBox title="กรองรายการ">
