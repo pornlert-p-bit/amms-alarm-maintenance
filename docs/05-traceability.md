@@ -6,6 +6,8 @@
 
 รูปแบบการสืบกลับ: **Requirement → Design → Implementation → Test**
 
+> **อัปเดต 26 ก.ย. 2569:** ทดสอบ Login / สิทธิ์ / RLS บนฐานข้อมูลจริงแล้ว — ดู [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md)
+>
 > **สถานะ ณ วันจัดทำ:** เอกสารออกแบบเสร็จครบ — คอลัมน์ Implementation ระบุ *ตำแหน่งที่วางแผนไว้* และคอลัมน์สถานะยังเป็น `รอ implement` ทั้งหมด จะอัปเดตเป็น `ผ่าน` เมื่อ Test นั้นรันผ่านจริงใน CI
 
 ---
@@ -14,18 +16,18 @@
 
 | REQ ID | Design | DB Object | Implementation (แผน) | Test ID | สถานะ |
 |---|---|---|---|---|---|
-| REQ-AUTH-01 | 02 §1, 03 §4 | `auth.users`, `profiles` | `app/(auth)/login/page.tsx` | TC-AUTH-01 | รอ implement |
-| REQ-AUTH-02 | 03 §4 | — | `lib/auth/actions.ts`, `proxy.ts` | TC-AUTH-02 | รอ implement |
-| REQ-AUTH-03 | 02 §3.1 | enum `user_role` | `types/role.ts` | TC-AUTH-03 | รอ implement |
-| REQ-AUTH-04 | 04 §2.1 | trigger `handle_new_user` | `supabase/schema.sql` §4.4 | TC-AUTH-04 | รอ implement |
-| REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/audit`, `users/actions.ts` | TC-AUTH-05 | รอ implement |
-| REQ-AUTH-06 | 04 §4 (BR-07) | RLS `profiles_admin_update_others` (`id <> auth.uid()`) | `users/actions.ts` + RLS | TC-AUTH-06 | รอ implement |
+| REQ-AUTH-01 | 02 §1, 03 §4 | `auth.users`, `profiles` | `app/(auth)/login/page.tsx` | TC-AUTH-01 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
+| REQ-AUTH-02 | 03 §4 | — | `lib/auth/actions.ts`, `proxy.ts` | TC-AUTH-02 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
+| REQ-AUTH-03 | 02 §3.1 | enum `user_role` | `lib/auth/roles.ts` | TC-AUTH-03 | ✅ ผ่าน (unit + [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md)) |
+| REQ-AUTH-04 | 04 §2.1 | trigger `handle_new_user` | `supabase/schema.sql` §4.4 | TC-AUTH-04 | ✅ ผ่าน (สร้างบัญชีจริง 3 บัญชี) |
+| REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/audit`, `users/actions.ts` | TC-AUTH-05 | 🟡 ผ่านระดับ RLS (A3) — หน้า UI ยังไม่ทำ |
+| REQ-AUTH-06 | 04 §4 (BR-07) | RLS `profiles_admin_update_others` (`id <> auth.uid()`) | `users/actions.ts` + RLS | TC-AUTH-06 | ✅ ผ่านระดับ RLS (A2, T4, V4) — หน้า UI ยังไม่ทำ |
 | REQ-MCH-01 | 02 §3.1 | `machines` | `features/machine/actions.ts` | TC-MCH-01 | รอ implement |
 | REQ-MCH-02 | 04 §2 | `machines` (5 คอลัมน์) | `features/machine/schema.ts` | TC-MCH-02 | รอ implement |
 | REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | รอ implement |
 | REQ-MCH-04 | 02 §4 | enum `machine_status` | `types/status.ts` | TC-MCH-04 | รอ implement |
 | REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | รอ implement |
-| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | รอ implement |
+| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | 🟡 ผ่าน INSERT (T5) — ทดสอบ UPDATE เมื่อมีข้อมูล |
 | REQ-ALM-01 | 02 §5.1 | `alarms` | `features/alarm/actions.ts` → `createAlarm` | TC-ALM-01 | รอ implement |
 | REQ-ALM-02 | 02 §4 | enum `alarm_status` | `alarm/rules.ts` → `allowedAlarmTransition` | TC-ALM-02 | รอ implement |
 | REQ-ALM-03 | 02 §5.3 (BR-03) | `alarms_closed_requires_cause` | `alarm/actions.ts` → `closeAlarm` | TC-ALM-03 | รอ implement |
@@ -49,13 +51,13 @@
 | REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | รอ implement |
 | REQ-VAL-03 | 03 §5.3 | — | `ActionResult.field` + `FormError.tsx` | TC-VAL-03 | รอ implement |
 | REQ-VAL-04 | 04 §3 (BR-08) | trigger `trg_alarms_check_occurred_at` | `alarm/schema.ts` + trigger | TC-VAL-04 | รอ implement |
-| REQ-SEC-01 | 02 §7 (TB-4) | — | `proxy.ts` | TC-SEC-01 | รอ implement |
-| REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `proxy.ts` + `requireAdmin()` | TC-SEC-02 | รอ implement |
-| REQ-SEC-03 | 03 §6 | — | `.gitignore`, `import 'server-only'` | TC-SEC-03 | รอ implement |
+| REQ-SEC-01 | 02 §7 (TB-4) | — | `proxy.ts` | TC-SEC-01 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
+| REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `proxy.ts` + `requireAdmin()` | TC-SEC-02 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
+| REQ-SEC-03 | 03 §6 | — | `.gitignore`, `import 'server-only'` | TC-SEC-03 | ✅ ผ่าน (ไม่พบ key ใน git history, v1 ไม่ใช้ Secret key) |
 | REQ-SEC-04 | 02 §7, ADR-002 | RLS ทุกตาราง | Server Action guards | TC-SEC-04 | รอ implement |
-| REQ-SEC-05 | ADR-006 | `revoke ... from anon` | `supabase/schema.sql` §7 | TC-SEC-05 | รอ implement |
+| REQ-SEC-05 | ADR-006 | `revoke ... from anon` | `supabase/schema.sql` §7 | TC-SEC-05 | ✅ ผ่าน (N1, DB-1) |
 | REQ-SEC-06 | ADR-005 | `audit_logs` | `features/audit/write.ts` | TC-SEC-06 | รอ implement |
-| REQ-OPS-01 | — | — | `.github/workflows/ci.yml` | TC-OPS-01 | รอ implement |
+| REQ-OPS-01 | — | — | `.github/workflows/ci.yml` | TC-OPS-01 | ✅ ผ่าน (CI เขียวบน GitHub) |
 | REQ-OPS-02 | — | — | Vercel Project | TC-OPS-02 | รอ implement |
 | REQ-OPS-03 | — | — | `README.md` | TC-OPS-03 | รอ implement |
 | REQ-OPS-04 | — | — | Git history | TC-OPS-04 | รอ implement |
@@ -64,7 +66,7 @@
 
 | REQ ID | Design | DB Object | Implementation (แผน) | Test ID | สถานะ |
 |---|---|---|---|---|---|
-| REQ-BON-01 | 02 §3.1 | enum `user_role` = `viewer` | `requireStaff()`, `Sidebar.tsx` | TC-BON-01 | รอ implement |
+| REQ-BON-01 | 02 §3.1 | enum `user_role` = `viewer` | `lib/auth/dal.ts`, `components/station/top-nav.tsx` | TC-BON-01 | ✅ ผ่านระดับ RLS (V2, V3) |
 | REQ-BON-02 | 04 §6 | `idx_alarms_code` | `dashboard/TopAlarmCodes.tsx` | TC-BON-02 | รอ implement |
 | REQ-BON-03 | 02 §3.1, ADR-004 | `machine_status_history` | `machines/[id]/history/page.tsx` | TC-BON-03 | รอ implement |
 | REQ-BON-04 | 03 §4 | — | `app/api/export/alarms/route.ts` | TC-BON-04 | รอ implement |
@@ -81,7 +83,7 @@
 | NFR-PERF-01 | 02 §8, 04 §6 | Seed ข้อมูลทดสอบตามที่ระบุ แล้ววัดเวลาโหลด Dashboard | TC-NFR-01 | รอ implement |
 | NFR-PERF-02 | 03 §3.1 | ตรวจว่า query มี `limit`/`range` และ filter ทำฝั่ง server | TC-NFR-02 | รอ implement |
 | NFR-SEC-01 | 02 §7, ADR-002 | ปิด guard ใน Server Action ชั่วคราวแล้วต้องยังถูก RLS ปฏิเสธ | TC-NFR-03 | รอ implement |
-| NFR-INT-01 | ADR-003 | เรียก Data API ตรงด้วยข้อมูลผิดกฎ แล้วต้องถูก Constraint ปฏิเสธ | TC-NFR-04 | รอ implement |
+| NFR-INT-01 | ADR-003 | เรียก Data API ตรงด้วยข้อมูลผิดกฎ แล้วต้องถูก Constraint ปฏิเสธ | TC-NFR-04 | ✅ ผ่าน (T6: Foreign Key ปฏิเสธผ่าน API ตรง) |
 | NFR-USE-01 | 03 §5.3 | ส่งฟอร์มที่ข้อมูลผิด แล้วตรวจว่าค่าที่กรอกยังอยู่และมี error ใต้ช่อง | TC-NFR-05 | รอ implement |
 | NFR-AVAIL-01 | 02 §6 | จำลอง DB error แล้วตรวจว่าแสดง Error State ไม่ใช่หน้าว่าง | TC-NFR-06 | รอ implement |
 | NFR-MAINT-01 | ADR-003, 02 §11 | เพิ่มค่าสถานะ 1 ค่า แล้วนับจำนวนไฟล์ที่ต้องแก้ (≤3) | TC-NFR-07 | รอ implement |

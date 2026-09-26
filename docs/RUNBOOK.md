@@ -133,6 +133,19 @@ left join profiles p on p.id = u.id
 where p.id is null;
 ```
 
+### 4.2 ตรวจความปลอดภัยฐานข้อมูล (รันทุกครั้งหลังแก้ `schema.sql`)
+รันใน Supabase → SQL Editor ทีละคำสั่ง:
+```sql
+-- ต้องได้ 0 แถว: คนที่ยังไม่ Login ต้องไม่มีสิทธิ์ในตารางใดเลย
+select table_name, privilege_type
+from information_schema.role_table_grants
+where grantee = 'anon' and table_schema = 'public';
+
+-- ทุกแถวต้องเป็น rowsecurity = true
+select tablename, rowsecurity from pg_tables where schemaname = 'public' order by tablename;
+```
+ถ้าผลไม่ตรง ห้าม deploy จนกว่าจะแก้ — ผลทดสอบชุดเต็ม (ยิง API ตรงด้วยทั้ง 3 Role) ดูตัวอย่างวิธีใน `docs/test-reports/2026-09-26-auth-rls.md`
+
 ---
 
 ## 5. Restart, Backup และ Restore
@@ -186,3 +199,4 @@ where p.id is null;
 |---|---|
 | 26 ก.ย. 2569 | สร้างคู่มือ: โครงสร้างระบบ, Login/Role, การตั้งค่าครั้งแรก, CI, Deploy |
 | 26 ก.ย. 2569 | เปลี่ยนหน้าจอเป็นธีม Station terminal (ADR-007): เพิ่มไฟล์ธีม, ชิ้นส่วน `components/station/`, กะ + นาฬิกา |
+| 26 ก.ย. 2569 | ตั้ง Supabase project จริง (Singapore), เพิ่มข้อ 4.2 วิธีตรวจความปลอดภัยฐานข้อมูล, ผลทดสอบ RLS 23/23 ผ่าน |
