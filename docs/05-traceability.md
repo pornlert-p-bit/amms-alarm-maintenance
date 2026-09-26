@@ -26,21 +26,21 @@
 | REQ-MCH-02 | 04 §2 | `machines` (5 คอลัมน์) | `features/machine/schema.ts` | TC-MCH-02 | ✅ ผ่าน [รายงาน Machine](test-reports/2026-09-26-machine.md) |
 | REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | ✅ ผ่าน (M5: UNIQUE ใน DB) |
 | REQ-MCH-04 | 02 §4 | enum `machine_status` | `features/machine/schema.ts` (`MACHINE_STATUSES`) | TC-MCH-04 | ✅ ผ่าน (unit + M11) |
-| REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | 🟡 Soft Delete ผ่าน (M15) — BR-05 รอทดสอบกับ Alarm จริง |
-| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | 🟡 ผ่าน INSERT (T5) — ทดสอบ UPDATE เมื่อมีข้อมูล |
-| REQ-ALM-01 | 02 §5.1 | `alarms` | `features/alarm/actions.ts` → `createAlarm` | TC-ALM-01 | รอ implement |
-| REQ-ALM-02 | 02 §4 | enum `alarm_status` | `alarm/rules.ts` → `allowedAlarmTransition` | TC-ALM-02 | รอ implement |
-| REQ-ALM-03 | 02 §5.3 (BR-03) | `alarms_closed_requires_cause` | `alarm/actions.ts` → `closeAlarm` | TC-ALM-03 | รอ implement |
-| REQ-ALM-04 | 02 §5.2, 03 §5.2 | `alarms.closed_by`, `closed_at` | `closeAlarm` (server กำหนดค่า) | TC-ALM-04 | รอ implement |
-| REQ-ALM-05 | 02 §4 (BR-02) | — (`rules.ts`, เหตุผลใน ADR-003) | `alarm/rules.ts` | TC-ALM-05 | รอ implement |
-| REQ-ALM-06 | 04 §4 | RLS `alarms_select_authenticated` | `alarm/queries.ts` | TC-ALM-06 | รอ implement |
+| REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | ✅ ผ่าน (M15 Soft Delete + A5 BR-05 กับข้อมูลจริง) |
+| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | ✅ ผ่าน (T5 INSERT + P6 UPDATE ด้วยข้อมูลจริง) |
+| REQ-ALM-01 | 02 §5.1 | `alarms` | `features/alarm/actions.ts` → `createAlarm` | TC-ALM-01 | ✅ ผ่าน (A4, A12) [รายงาน Alarm](test-reports/2026-09-26-alarm.md) |
+| REQ-ALM-02 | 02 §4 | enum `alarm_status` | `alarm/rules.ts` → `allowedAlarmTransition` | TC-ALM-02 | ✅ ผ่าน (unit 9 กรณี + A7, A8) |
+| REQ-ALM-03 | 02 §5.3 (BR-03) | `alarms_closed_requires_cause` | `alarm/actions.ts` → `closeAlarm` | TC-ALM-03 | ✅ ผ่าน (A6 + unit) |
+| REQ-ALM-04 | 02 §5.2, 03 §5.2 | `alarms.closed_by`, `closed_at` | `closeAlarm` + trigger `trg_alarms_enforce_update` | TC-ALM-04 | ✅ ผ่าน (A8 + P3: ปลอมไม่ได้แม้ยิง API ตรง) |
+| REQ-ALM-05 | 02 §4 (BR-02) | — (`rules.ts`, เหตุผลใน ADR-003) | `rules.ts` + trigger `trg_alarms_enforce_update` (migration 003) | TC-ALM-05 | ✅ ผ่าน (A10 + P1, P2) |
+| REQ-ALM-06 | 04 §4 | RLS `alarms_select_authenticated` | `alarm/queries.ts` | TC-ALM-06 | ✅ ผ่าน |
 | REQ-MNT-01 | 02 §3.1 | `maintenance_records` | `features/maintenance/actions.ts` | TC-MNT-01 | รอ implement |
 | REQ-MNT-02 | 04 §2.1 | `maintenance_records.alarm_id` (nullable FK) | `maintenance/schema.ts` | TC-MNT-02 | รอ implement |
 | REQ-MNT-03 | 02 §4 | enum `mnt_status` (มี `Waiting Part`) | `maintenance/rules.ts` | TC-MNT-03 | รอ implement |
 | REQ-MNT-04 | 04 §3 (BR-04) | `mnt_done_requires_action` | `maintenance/actions.ts` | TC-MNT-04 | รอ implement |
 | REQ-MNT-05 | 04 §4 | RLS `mnt_staff_insert/update` | `requireStaff()` | TC-MNT-05 | รอ implement |
 | REQ-SRC-01 | 03 §3.1 | `idx_machines_search` | `machine/queries.ts` → `getMachines` | TC-SRC-01 | ✅ ผ่าน (M8–M10) |
-| REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | รอ implement |
+| REQ-SRC-02 | 03 §3.2 | `idx_alarms_status`, `idx_alarms_occurred` | `alarm/queries.ts` + `AlarmFilterBar` | TC-SRC-02 | ✅ ผ่าน (A11) |
 | REQ-SRC-03 | 03 §3.2 | `idx_mnt_status`, `idx_mnt_technician` | `maintenance/queries.ts` | TC-SRC-03 | รอ implement |
 | REQ-DSH-01 | 04 §6 | query `group by status` | `dashboard/queries.ts` | TC-DSH-01 | รอ implement |
 | REQ-DSH-02 | 04 §6 | `idx_machines_status` | `dashboard/queries.ts` | TC-DSH-02 | รอ implement |
@@ -50,7 +50,7 @@
 | REQ-VAL-01 | 03 §5.3 | `check btrim(...) <> ''` ทุกตาราง | `features/*/schema.ts` (zod) | TC-VAL-01 | ✅ ผ่าน (M3 + unit) |
 | REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | ✅ ผ่าน (M4, M5, M7 + unit) |
 | REQ-VAL-03 | 03 §5.3 | — | `lib/action-result.ts`, `components/station/ui.tsx` | TC-VAL-03 | ✅ ผ่าน (M3, M5, M6) |
-| REQ-VAL-04 | 04 §3 (BR-08) | trigger `trg_alarms_check_occurred_at` | `alarm/schema.ts` + trigger | TC-VAL-04 | รอ implement |
+| REQ-VAL-04 | 04 §3 (BR-08) | trigger `trg_alarms_check_occurred_at` | `alarm/schema.ts` + trigger | TC-VAL-04 | ✅ ผ่าน (A3 + unit + trigger) |
 | REQ-SEC-01 | 02 §7 (TB-4) | — | `proxy.ts` | TC-SEC-01 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
 | REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `proxy.ts` + `requireAdmin()` | TC-SEC-02 | ✅ ผ่าน [รายงาน 26 ก.ย.](test-reports/2026-09-26-auth-rls.md) |
 | REQ-SEC-03 | 03 §6 | — | `.gitignore`, `import 'server-only'` | TC-SEC-03 | ✅ ผ่าน (ไม่พบ key ใน git history, v1 ไม่ใช้ Secret key) |
@@ -70,10 +70,10 @@
 | REQ-BON-02 | 04 §6 | `idx_alarms_code` | `dashboard/TopAlarmCodes.tsx` | TC-BON-02 | รอ implement |
 | REQ-BON-03 | 02 §3.1, ADR-004 | `machine_status_history` | `machines/[id]/history/page.tsx` | TC-BON-03 | รอ implement |
 | REQ-BON-04 | 03 §4 | — | `app/api/export/alarms/route.ts` | TC-BON-04 | รอ implement |
-| REQ-BON-05 | ADR-005 | `audit_logs` + RLS admin only | `app/(app)/audit/page.tsx` | TC-BON-05 | รอ implement |
+| REQ-BON-05 | ADR-005 | `audit_logs` + RLS admin only | `app/(app)/audit/page.tsx` | TC-BON-05 | 🟡 RLS ผ่าน (P7) — หน้าแสดงผลยังไม่ทำ |
 | REQ-BON-06 | 03 §3.2 | — | `ThemeToggle.tsx`, Tailwind breakpoints | TC-BON-06 | รอ implement |
 | REQ-BON-07 | 02 §4 | enum `mnt_status` = `Waiting Part` | `maintenance/rules.ts` | TC-BON-07 | รอ implement |
-| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | รอ implement |
+| REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | 🟡 ผ่านในหน้า Alarm (A11) — หน้างานซ่อมยังไม่ทำ |
 | REQ-BON-09 | ADR-004 | `alarms.event_id`, `machines.last_seen_at`, `status_source` | `features/integration/*`, `api/plc/status` | TC-BON-09 | รอ implement |
 
 ## 3. Non-functional Requirements
@@ -82,7 +82,7 @@
 |---|---|---|---|---|
 | NFR-PERF-01 | 02 §8, 04 §6 | Seed ข้อมูลทดสอบตามที่ระบุ แล้ววัดเวลาโหลด Dashboard | TC-NFR-01 | รอ implement |
 | NFR-PERF-02 | 03 §3.1 | ตรวจว่า query มี `limit`/`range` และ filter ทำฝั่ง server | TC-NFR-02 | รอ implement |
-| NFR-SEC-01 | 02 §7, ADR-002 | ปิด guard ใน Server Action ชั่วคราวแล้วต้องยังถูก RLS ปฏิเสธ | TC-NFR-03 | รอ implement |
+| NFR-SEC-01 | 02 §7, ADR-002 | ปิด guard ใน Server Action ชั่วคราวแล้วต้องยังถูก RLS ปฏิเสธ | TC-NFR-03 | ✅ ผ่าน (P1–P9: ข้าม Server Action แล้วฐานข้อมูลยังปฏิเสธ = TC-NFR-03) |
 | NFR-INT-01 | ADR-003 | เรียก Data API ตรงด้วยข้อมูลผิดกฎ แล้วต้องถูก Constraint ปฏิเสธ | TC-NFR-04 | ✅ ผ่าน (T6: Foreign Key ปฏิเสธผ่าน API ตรง) |
 | NFR-USE-01 | 03 §5.3 | ส่งฟอร์มที่ข้อมูลผิด แล้วตรวจว่าค่าที่กรอกยังอยู่และมี error ใต้ช่อง | TC-NFR-05 | ✅ ผ่าน (M6 หลังแก้บั๊ก select) |
 | NFR-AVAIL-01 | 02 §6 | จำลอง DB error แล้วตรวจว่าแสดง Error State ไม่ใช่หน้าว่าง | TC-NFR-06 | รอ implement |

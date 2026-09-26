@@ -346,3 +346,99 @@ grant all on all tables in schema public to service_role;
 --   ('M-002', 'Injection 02',    'Molding',    'Line B'),
 --   ('M-003', 'Conveyor 03',     'Conveyor',   'Line A'),
 --   ('M-004', 'Robot Arm 04',    'Robot',      'Line C');
+
+-- ---------------------------------------------------------------------
+-- 9. STAFF DIRECTORY (เพิ่มใน migration 002 — ดู supabase/migrations/002_staff_directory.sql)
+-- ---------------------------------------------------------------------
+-- ⚠️ view นี้ข้าม RLS ของ profiles โดยตั้งใจ — เลือกได้แค่ id, full_name, role เท่านั้น
+create or replace view public.staff_directory
+with (security_invoker = false) as
+  select id, full_name, role
+  from public.profiles;
+
+revoke all on public.staff_directory from public, anon;
+grant select on public.staff_directory to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 10. ALARM INTEGRITY (เพิ่มใน migration 003 — ดู supabase/migrations/003_alarm_integrity.sql)
+-- ---------------------------------------------------------------------
+create or replace function public.enforce_alarm_update()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  -- Alarm ที่ปิดแล้วเป็นประวัติ ห้ามแก้ทุกกรณี (REQ-ALM-05)
+  if old.status = 'Closed' then
+    raise exception 'closed alarm cannot be modified' using errcode = 'check_violation';
+  end if;
+
+  -- ข้อมูลที่ระบุตัวตน/ที่มาของ Alarm ห้ามเปลี่ยนหลังบันทึก
+  if new.machine_id is distinct from old.machine_id
+     or new.created_by is distinct from old.created_by
+     or new.event_id is distinct from old.event_id then
+    raise exception 'alarm origin fields are immutable' using errcode = 'check_violation';
+  end if;
+
+  -- ลำดับสถานะที่อนุญาต (BR-02): Open → In Progress → Closed, Open → Closed
+  if new.status is distinct from old.status then
+    if not (
+      (old.status = 'Open' and new.status in ('In Progress', 'Closed'))
+      or (old.status = 'In Progress' and new.status = 'Closed')
+    ) then
+      raise exception 'invalid alarm status transition' using errcode = 'check_violation';
+    end if;
+  end if;
+
+  -- ผู้ปิดและเวลาปิดมาจาก token ของผู้ส่งคำสั่งเสมอ — ค่าที่ส่งมาจะถูกเขียนทับ ปลอมไม่ได้ (REQ-ALM-04)
+  if new.status = 'Closed' then
+    new.closed_by := auth.uid();
+    new.closed_at := now();
+  else
+    new.closed_by := null;
+    new.closed_at := null;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_alarms_enforce_update on public.alarms;
+create trigger trg_alarms_enforce_update
+  before update on public.alarms
+  for each row execute function public.enforce_alarm_update();
+
+-- ห้ามผู้ใช้ทั่วไปเรียกฟังก์ชันนี้ตรง ๆ (ทำงานผ่าน trigger เท่านั้น)
+revoke all on function public.enforce_alarm_update() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 11. ALARM INSERT INTEGRITY (เพิ่มใน migration 004 — ดู supabase/migrations/004_alarm_insert_integrity.sql)
+-- ---------------------------------------------------------------------
+create or replace function public.enforce_alarm_insert()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  -- Alarm ใหม่ต้องเริ่มที่ Open และยังไม่มีข้อมูลการปิด (ปิดได้ทางเดียวคือผ่านการ UPDATE ที่ migration 003 คุมอยู่)
+  new.status    := 'Open';
+  new.cause     := null;
+  new.closed_by := null;
+  new.closed_at := null;
+
+  -- ผู้บันทึกมาจาก token เสมอ ปลอมไม่ได้
+  -- ถ้าไม่มี token (ระบบอัตโนมัติที่ใช้ service role เช่น PLC Gateway ใน v2) จึงใช้ค่าที่ส่งมา
+  if auth.uid() is not null then
+    new.created_by := auth.uid();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_alarms_enforce_insert on public.alarms;
+create trigger trg_alarms_enforce_insert
+  before insert on public.alarms
+  for each row execute function public.enforce_alarm_insert();
+
+revoke all on function public.enforce_alarm_insert() from public, anon, authenticated;
