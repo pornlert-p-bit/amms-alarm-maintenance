@@ -2,7 +2,7 @@
 
 **ระบบ:** Alarm & Maintenance Management System (AMMS)
 **อ้างอิง:** [01-requirement-analysis.md](01-requirement-analysis.md) · [02-system-design.md](02-system-design.md)
-**Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS · Supabase (PostgreSQL + Auth + RLS) · Vercel
+**Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS · Supabase (PostgreSQL + Auth + RLS) · Vercel
 **วันที่:** 21 กันยายน 2569
 
 > อ้างอิงแนวทางจากเอกสารประกอบการสอน Chapter 03
@@ -16,15 +16,15 @@
 flowchart TB
     subgraph BROWSER["Browser — ไม่เชื่อถือ"]
         CC["Client Components<br/>MachineForm, AlarmFilter,<br/>StatusSelect, AlarmChart, ThemeToggle"]
-        PUB["Client-safe config<br/>NEXT_PUBLIC_SUPABASE_URL<br/>NEXT_PUBLIC_SUPABASE_ANON_KEY"]
+        PUB["Client-safe config<br/>NEXT_PUBLIC_SUPABASE_URL<br/>NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"]
     end
 
     subgraph SERVER["Vercel Server Runtime — เชื่อถือได้"]
-        MW["middleware.ts<br/>ตรวจ session + กัน route"]
+        MW["proxy.ts<br/>ตรวจ session + กัน route"]
         SC["Server Components<br/>DashboardPage, MachinesPage,<br/>AlarmsPage, MachineHistoryPage"]
         ACT["Server Actions<br/>createMachine, closeAlarm,<br/>createMaintenance, updateUserRole"]
         API["Route Handlers<br/>/api/export/alarms<br/>/api/plc/status"]
-        SEC["Server-only secrets<br/>SUPABASE_SERVICE_ROLE_KEY<br/>PLC_WEBHOOK_SECRET"]
+        SEC["Server-only secrets<br/>SUPABASE_SECRET_KEY (v1 ไม่ใช้)<br/>PLC_WEBHOOK_SECRET (v2)"]
     end
 
     subgraph SUPABASE["Supabase"]
@@ -37,7 +37,7 @@ flowchart TB
     CC -->|"Server Action call"| ACT
     CC -->|"navigate / RSC"| MW
     MW --> SC
-    CC -->|"signIn / signOut เท่านั้น"| AUTH
+    ACT -->|"signIn / signOut"| AUTH
     SC -->|"SELECT ผ่าน server client"| DBX
     ACT -->|"INSERT / UPDATE + audit"| DBX
     API -->|"SELECT / INSERT"| DBX
@@ -97,7 +97,7 @@ flowchart TB
 
 | Operation | ช่องทางที่เลือก | เหตุผล |
 |---|---|---|
-| Login / Logout | **Client → Supabase Auth ตรง** | เป็น flow ของ Auth SDK โดยตรง ไม่แตะข้อมูลธุรกิจ |
+| Login / Logout | **Server Action → Supabase Auth** | session ถูกเขียนลง cookie ฝั่ง server — Browser ไม่ต้องคุยกับ Supabase เลย (ปรับให้เข้มขึ้นจากแบบเดิมเมื่อ 26 ก.ย. 2569) |
 | อ่านรายการ Machine / Alarm / Maintenance | **Server Component → PostgreSQL** | ต้อง filter + paginate ฝั่ง server และไม่สร้าง API ภายในเพิ่มโดยไม่จำเป็น |
 | Aggregate ของ Dashboard | **Server Component → PostgreSQL** | นับที่ฐานข้อมูล ไม่ดึงทุกแถวมานับที่ Client (QAS-01) |
 | สร้าง / แก้ / ลบ Machine | **Server Action** | ต้องตรวจ Role Admin, ตรวจ BR-05, เขียน Audit |
@@ -186,8 +186,8 @@ type ActionResult<T> =
 | ข้อมูล | ตำแหน่งที่เก็บ | อยู่ใน Client ได้? |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Vercel Env + `.env.local` | ✅ ออกแบบมาให้ใช้ฝั่ง Client |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Vercel Env + `.env.local` | ✅ ปลอดภัยเมื่อ RLS ถูกต้อง |
-| `SUPABASE_SERVICE_ROLE_KEY` | Vercel Env (Server) เท่านั้น | ❌ **ห้ามเด็ดขาด** |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Vercel Env + `.env.local` | ✅ ปลอดภัยเมื่อ RLS ถูกต้อง |
+| `SUPABASE_SECRET_KEY` (ชื่อเดิม service_role) | **v1 ไม่ใช้** — ถ้าจำเป็นใส่ Vercel Env ฝั่ง Server เท่านั้น | ❌ **ห้ามเด็ดขาด** |
 | `PLC_WEBHOOK_SECRET` (v2) | Vercel Env (Server) เท่านั้น | ❌ |
 | Database connection string | Server / CI เท่านั้น | ❌ |
 | User access token | จัดการผ่าน Cookie ของ Supabase Auth | — ไม่ hard-code |
@@ -195,7 +195,7 @@ type ActionResult<T> =
 **มาตรการที่ใช้**
 
 - `.env.local` อยู่ใน `.gitignore` — commit เฉพาะ `.env.local.example` ที่ไม่มีค่าจริง (REQ-SEC-03)
-- ไฟล์ที่ถือ Service Role Key ตั้งชื่อ `lib/supabase/admin.ts` และมี `import 'server-only'` บรรทัดแรก เพื่อให้ build **พัง** ถ้ามีใคร import จาก Client
+- ทุกไฟล์ที่รันฝั่ง server (`lib/supabase/server.ts`, `lib/auth/dal.ts`) มี `import "server-only"` บรรทัดแรก เพื่อให้ build **พัง** ถ้ามีใคร import จาก Client — และ v1 ออกแบบให้ **ไม่ใช้ Secret key เลย** (ทุก query ทำในนามผู้ใช้ให้ RLS ตรวจ)
 - ตรวจ Environment Variable ที่จำเป็นตอน bootstrap และ fail เร็วพร้อมข้อความชัด (FM-09)
 - ห้ามตั้งชื่อ Secret ใด ๆ ด้วย prefix `NEXT_PUBLIC_`
 
@@ -276,7 +276,7 @@ amms/
 │  └─ api/
 │     ├─ export/alarms/route.ts        ← CSV Export
 │     └─ plc/status/route.ts           ← Webhook (v2)
-├─ middleware.ts                       ← ตรวจ session + กัน route
+├─ proxy.ts                            ← ตรวจ session + กัน route (Next.js 16 เปลี่ยนชื่อจาก middleware.ts)
 ├─ features/                           ← แบ่งตาม domain ไม่ใช่ตามชื่อหน้า
 │  ├─ machine/   { actions.ts, queries.ts, schema.ts, rules.ts, components/ }
 │  ├─ alarm/     { actions.ts, queries.ts, schema.ts, rules.ts, components/ }
@@ -285,8 +285,8 @@ amms/
 │  ├─ audit/     { write.ts, queries.ts }
 │  └─ integration/ { plc.ts, simulator.ts }
 ├─ lib/
-│  ├─ supabase/  { client.ts, server.ts, admin.ts, middleware.ts }
-│  └─ auth/      { requireUser.ts, requireStaff.ts, requireAdmin.ts }
+│  ├─ supabase/  { server.ts, proxy.ts }
+│  └─ auth/      { dal.ts (requireUser/Staff/Admin), roles.ts, actions.ts, schema.ts }
 ├─ components/ui/                       ← StatusBadge, ConfirmDialog, EmptyState, ErrorState
 ├─ types/
 ├─ supabase/schema.sql                  ← DDL ฉบับเต็ม
@@ -337,7 +337,7 @@ amms/
 | ข้อตรวจ | ผล | หลักฐาน |
 |---|---|---|
 | Frontend มีหน้าที่หลักด้าน UI/interaction ไม่มี Business Rule สำคัญปะปน | ✅ | Rule อยู่ใน `features/*/rules.ts` ที่รันฝั่ง server (§9.1) |
-| ไม่มี Secret หรือ credential ถูกส่งไป Browser | ✅ | ตาราง §6 + `import 'server-only'` ใน `lib/supabase/admin.ts` |
+| ไม่มี Secret หรือ credential ถูกส่งไป Browser | ✅ | ตาราง §6 + `import "server-only"` ใน `lib/supabase/server.ts` และ `lib/auth/dal.ts` |
 | ทุก mutation สำคัญมี Authorization ฝั่ง trusted layer | ✅ | Middleware → Server Action guard → RLS (TB-4) |
 | Database มี key/constraint/policy รองรับความถูกต้อง | ✅ | [04-database-schema.md](04-database-schema.md) |
 | อธิบาย Data Flow ของ use case หลักได้ตั้งแต่ต้นจนจบ | ✅ | §5.1, §5.2 และ Sequence Diagram ใน 02 §5 |

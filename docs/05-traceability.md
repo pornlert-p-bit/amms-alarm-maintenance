@@ -15,7 +15,7 @@
 | REQ ID | Design | DB Object | Implementation (แผน) | Test ID | สถานะ |
 |---|---|---|---|---|---|
 | REQ-AUTH-01 | 02 §1, 03 §4 | `auth.users`, `profiles` | `app/(auth)/login/page.tsx` | TC-AUTH-01 | รอ implement |
-| REQ-AUTH-02 | 03 §4 | — | `lib/auth/signOut.ts`, `middleware.ts` | TC-AUTH-02 | รอ implement |
+| REQ-AUTH-02 | 03 §4 | — | `lib/auth/actions.ts`, `proxy.ts` | TC-AUTH-02 | รอ implement |
 | REQ-AUTH-03 | 02 §3.1 | enum `user_role` | `types/role.ts` | TC-AUTH-03 | รอ implement |
 | REQ-AUTH-04 | 04 §2.1 | trigger `handle_new_user` | `supabase/schema.sql` §4.4 | TC-AUTH-04 | รอ implement |
 | REQ-AUTH-05 | 02 §3.1 | RLS `profiles_admin_update_others` | `features/audit`, `users/actions.ts` | TC-AUTH-05 | รอ implement |
@@ -25,7 +25,7 @@
 | REQ-MCH-03 | 04 §3 (BR-01) | `machines_machine_id_key` | `machine/actions.ts` + UNIQUE | TC-MCH-03 | รอ implement |
 | REQ-MCH-04 | 02 §4 | enum `machine_status` | `types/status.ts` | TC-MCH-04 | รอ implement |
 | REQ-MCH-05 | 04 §2.1 (BR-06) | `machines.deleted_at`, FK `restrict` | `machine/actions.ts` → `softDeleteMachine` | TC-MCH-05 | รอ implement |
-| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `middleware.ts` + `requireAdmin()` | TC-MCH-06 | รอ implement |
+| REQ-MCH-06 | 02 §7 (TB-4) | RLS `machines_admin_update` | `proxy.ts` + `requireAdmin()` | TC-MCH-06 | รอ implement |
 | REQ-ALM-01 | 02 §5.1 | `alarms` | `features/alarm/actions.ts` → `createAlarm` | TC-ALM-01 | รอ implement |
 | REQ-ALM-02 | 02 §4 | enum `alarm_status` | `alarm/rules.ts` → `allowedAlarmTransition` | TC-ALM-02 | รอ implement |
 | REQ-ALM-03 | 02 §5.3 (BR-03) | `alarms_closed_requires_cause` | `alarm/actions.ts` → `closeAlarm` | TC-ALM-03 | รอ implement |
@@ -49,8 +49,8 @@
 | REQ-VAL-02 | 04 §3 | `machines_machine_id_format` + UNIQUE | `machine/schema.ts` | TC-VAL-02 | รอ implement |
 | REQ-VAL-03 | 03 §5.3 | — | `ActionResult.field` + `FormError.tsx` | TC-VAL-03 | รอ implement |
 | REQ-VAL-04 | 04 §3 (BR-08) | trigger `trg_alarms_check_occurred_at` | `alarm/schema.ts` + trigger | TC-VAL-04 | รอ implement |
-| REQ-SEC-01 | 02 §7 (TB-4) | — | `middleware.ts` | TC-SEC-01 | รอ implement |
-| REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `middleware.ts` + `requireAdmin()` | TC-SEC-02 | รอ implement |
+| REQ-SEC-01 | 02 §7 (TB-4) | — | `proxy.ts` | TC-SEC-01 | รอ implement |
+| REQ-SEC-02 | 02 §7 (TB-4) | RLS admin policies | `proxy.ts` + `requireAdmin()` | TC-SEC-02 | รอ implement |
 | REQ-SEC-03 | 03 §6 | — | `.gitignore`, `import 'server-only'` | TC-SEC-03 | รอ implement |
 | REQ-SEC-04 | 02 §7, ADR-002 | RLS ทุกตาราง | Server Action guards | TC-SEC-04 | รอ implement |
 | REQ-SEC-05 | ADR-006 | `revoke ... from anon` | `supabase/schema.sql` §7 | TC-SEC-05 | รอ implement |
