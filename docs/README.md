@@ -19,7 +19,7 @@ Analyze → Specify → Validate → **Design** → Review → Build
 | [04-database-schema.md](04-database-schema.md) | ERD, Constraint Matrix, RLS Policy Matrix, DDL ฉบับเต็มที่รันได้, Query ของ Dashboard, แผน Migration | Chapter 03 §3.3 |
 | [05-traceability.md](05-traceability.md) | Traceability Matrix (REQ → Design → DB → Code → Test) และ Test Case ที่วางแผนไว้ 4 ระดับ | Chapter 01 §7.3 |
 | [06-design-review.md](06-design-review.md) | ผลตรวจ Checklist 29 ข้อจากทั้ง 3 บท + ช่องโหว่ของแบบที่พบและแก้ไปแล้ว 8 จุด | Chapter 01 §7.1, Chapter 02 §11, Chapter 03 §12 |
-| [adr/](adr/) | Architecture Decision Record 6 ฉบับ | Chapter 02 §10 |
+| [adr/](adr/) | Architecture Decision Record 7 ฉบับ | Chapter 02 §10 |
 
 ### Architecture Decision Records
 
@@ -31,6 +31,7 @@ Analyze → Specify → Validate → **Design** → Review → Build
 | [ADR-004](adr/ADR-004-plc-integration-boundary.md) | กำหนด Integration Boundary ของ PLC ไว้ล่วงหน้า แต่ v1 ใช้ Simulator | Accepted |
 | [ADR-005](adr/ADR-005-audit-log-in-server-action.md) | เขียน Audit Log จาก Server Action ไม่ใช้ Database Trigger | Accepted |
 | [ADR-006](adr/ADR-006-least-privilege-grants.md) | ให้สิทธิ์ฐานข้อมูลเฉพาะ `authenticated` และใช้ RLS แบบ Default Deny | Accepted |
+| [ADR-007](adr/ADR-007-station-terminal-ui.md) | หน้าจอแบบ Station terminal ตามแนว ISA-101 | Accepted |
 
 ---
 

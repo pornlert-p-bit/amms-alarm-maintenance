@@ -31,6 +31,9 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `lib/supabase/server.ts` | สร้างตัวเชื่อม Supabase ฝั่ง server (ทำงานในนามผู้ใช้ → RLS ตรวจได้) |
 | `lib/supabase/proxy.ts` | ตัวช่วยต่ออายุ session ที่ `proxy.ts` เรียกใช้ |
 | `lib/env.ts` | อ่านค่า env และแจ้ง error ชัด ๆ ถ้าขาด |
+| `app/globals.css` | ชุดสี (token) และฟอนต์ของธีม Station terminal — แก้สีทั้งระบบที่นี่ที่เดียว |
+| `components/station/` | ชิ้นส่วนหน้าจอ: `group-box` (กรอบมีหัวข้อ), `status-pill` (ป้ายสถานะ), `shift-clock` (กะ + นาฬิกา), `top-nav` (เมนูบน), `page-title` |
+| `lib/shift.ts` | คำนวณกะเช้า/บ่าย/ดึกจากชั่วโมง (มี unit test) |
 | `app/(auth)/login/` | หน้า Login |
 | `app/(app)/` | หน้าหลักทั้งหมดที่ต้อง Login (dashboard, machines, alarms, maintenance, users) |
 | `app/forbidden/` | หน้าแจ้ง "ไม่มีสิทธิ์" |
@@ -99,6 +102,9 @@ npm run dev     # เปิด http://localhost:3000
 | Role ที่มีในระบบ | enum `user_role` ใน `supabase/schema.sql` **และ** `ROLES` ใน `lib/auth/roles.ts` (ต้องตรงกัน) |
 | หน้าที่ต้องเป็น Admin | `ADMIN_ONLY_PATHS` ใน `lib/auth/roles.ts` + `requireAdmin()` ในหน้านั้น |
 | หน้าที่เข้าได้โดยไม่ Login | `PUBLIC_PATHS` ใน `lib/auth/roles.ts` |
+| เมนูด้านบน (ชื่อ/ลำดับ) | `NAV_ITEMS` ใน `lib/auth/roles.ts` |
+| สีและฟอนต์ของหน้าจอ | `@theme` ใน `app/globals.css` (มีค่าความต่างสี WCAG กำกับไว้) — เหตุผลการออกแบบดู ADR-007 |
+| ช่วงเวลาของแต่ละกะ | `lib/shift.ts` |
 | เปิด/ปิดการสมัครสมาชิกเอง | Supabase → Authentication → Sign In / Providers |
 | CI | `.github/workflows/ci.yml` |
 
@@ -179,3 +185,4 @@ where p.id is null;
 | วันที่ | เปลี่ยนอะไร |
 |---|---|
 | 26 ก.ย. 2569 | สร้างคู่มือ: โครงสร้างระบบ, Login/Role, การตั้งค่าครั้งแรก, CI, Deploy |
+| 26 ก.ย. 2569 | เปลี่ยนหน้าจอเป็นธีม Station terminal (ADR-007): เพิ่มไฟล์ธีม, ชิ้นส่วน `components/station/`, กะ + นาฬิกา |

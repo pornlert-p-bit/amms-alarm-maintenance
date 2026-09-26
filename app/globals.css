@@ -1,11 +1,63 @@
 @import "tailwindcss";
 
-/* ฟอนต์หลักมาจาก next/font ใน app/layout.tsx (ตัวแปร --font-thai) */
-@theme inline {
-  --font-sans: var(--font-thai), ui-sans-serif, system-ui, sans-serif;
+/*
+ * ธีม "Station terminal" — ต่อยอดจากชุดสีของ One Card
+ * โครง: แถบบนสีเข้ม → แถวป้ายสถานะ → กรอบมีหัวข้อบนพื้นเทาอ่อน
+ *
+ * หลักการใช้สี (แนว ISA-101 สำหรับจอในโรงงาน):
+ *   สถานะปกติ = เทา/ขาวเรียบ ๆ, ใช้สีเฉพาะเมื่อผิดปกติ (แดง = Alarm, ส้ม = กำลังซ่อม)
+ *
+ * ค่าความต่างสีตามมาตรฐาน WCAG (ต้องได้อย่างน้อย 4.5:1 สำหรับตัวหนังสือปกติ):
+ *   ok  #137a4c + ตัวขาว = 5.4:1  (สีเขียวเดิมของ One Card #1a9e63 ได้แค่ 3.4:1 จึงปรับให้เข้มขึ้น)
+ *   warn-ink #7a4a05 บน warn-bg = 6.8:1  (#b06f00 เดิมได้ 3.7:1)
+ *   muted #5b6270 บน ground = 5.4:1  (#6b7280 เดิมได้ 4.2:1)
+ */
+@theme {
+  /* โครงหลัก */
+  --color-top: #1b2130; /* แถบบน */
+  --color-top-ink: #c9d0dc; /* ตัวหนังสือบนแถบบน */
+  --color-ground: #eef0f3; /* พื้นหลังพื้นที่ทำงาน */
+  --color-panelhead: #f4f5f8; /* หัวตาราง */
+  --color-line: #dde1e7; /* เส้นแบ่งบาง */
+  --color-line-strong: #c9ced6; /* ขอบกรอบ / ขอบ input */
+
+  /* ตัวหนังสือ — เกือบดำ ไม่ใช้ดำสนิท */
+  --color-ink: #1b2130;
+  --color-ink-2: #4a5262;
+  --color-muted: #5b6270;
+
+  /* สีหลักหนึ่งสี (น้ำเงิน One Card) */
+  --color-accent: #1a41c4;
+  --color-accent-hover: #15359f;
+  --color-accent-soft: #e6ebfb;
+
+  /* สีสถานะ — ใช้เฉพาะเมื่อมีความหมาย */
+  --color-ok: #137a4c;
+  --color-ok-bg: #e6f6ee;
+  --color-bad: #c23b34;
+  --color-bad-bg: #fbeae9;
+  --color-bad-ink: #8f2a24;
+  --color-warn: #e08a1e;
+  --color-warn-bg: #fdf1de;
+  --color-warn-ink: #7a4a05;
+  --color-neutral: #dde1e7;
+  --color-neutral-ink: #3b4250;
+
+  /* ฟอนต์: Anuphan เหมือน One Card, ตัวเลข/รหัส/เวลาใช้ monospace */
+  --font-sans: var(--font-anuphan), "Noto Sans Thai", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 
 body {
-  background: var(--color-slate-100);
-  color: var(--color-slate-900);
+  background: var(--color-ground);
+  color: var(--color-ink);
+}
+
+/*
+ * หัวข้อของกรอบ (group box) ที่ฝังอยู่บนเส้นขอบ แบบหน้าจอ One Card Station
+ * พื้นหลังแบ่งครึ่งบน/ล่าง: ครึ่งบนกลืนกับพื้นเทาด้านนอก ครึ่งล่างกลืนกับพื้นขาวในกรอบ
+ * ทำให้เส้นขอบดูเหมือน "ขาด" ตรงหัวข้อพอดี
+ */
+.groupbox-title {
+  background: linear-gradient(to bottom, var(--color-ground) 50%, #ffffff 50%);
 }
