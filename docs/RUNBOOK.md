@@ -43,6 +43,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (ช่องตัวเลข, ผังเครื่อง, กราฟ recharts) |
 | `features/users/` | หน้าผู้ใช้งาน: กฎเปลี่ยน Role (`rules.ts`), รายชื่อ (`queries.ts`), เปลี่ยน Role + Audit Log (`actions.ts`) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
+| `supabase/seed/` | ข้อมูลสาธิต (Alarm ย้อนหลัง) + สคริปต์สร้าง — ดูข้อ 2.7 |
 | `supabase/migrations/` | ไฟล์แก้ฐานข้อมูลที่ต้องรันตามลำดับกับ project ที่ใช้งานอยู่แล้ว (ดูข้อ 2.6) |
 | `app/(auth)/login/` | หน้า Login |
 | `app/(app)/` | หน้าหลักทั้งหมดที่ต้อง Login (dashboard, machines, alarms, maintenance, users) |
@@ -116,6 +117,13 @@ npm run dev     # เปิด http://localhost:3000
 | `007_profiles_column_grants.sql` | ให้แก้ตาราง profiles ได้เฉพาะคอลัมน์ `role` (ปิดการแก้ชื่อ/วันที่/id ผ่าน API) | ✅ 26 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
+
+### 2.7 ข้อมูลสาธิต (Alarm ย้อนหลัง)
+- ไฟล์ `supabase/seed/demo_alarm_history.sql` เพิ่ม Alarm ที่ปิดแล้ว 60 รายการย้อนหลัง 29 วัน ให้กราฟหน้าภาพรวมมีข้อมูล — **ใช้กับระบบสาธิตเท่านั้น ห้ามรันบนระบบที่ใช้งานจริง**
+- รันใน SQL Editor ได้ซ้ำโดยไม่เพิ่มซ้ำ ทุกแถวมี `event_id` ขึ้นต้นด้วย `demo-seed-` ไว้แยกจากข้อมูลจริง
+- สคริปต์จะปิด trigger `trg_alarms_enforce_insert` ชั่วคราว **ภายใน transaction เดียว** (ไม่งั้นใส่ประวัติที่ปิดในอดีตไม่ได้) — หลังรันให้ดูผลบรรทัดสุดท้าย `tgenabled` ต้องเป็น `O` (เปิดอยู่)
+- ลบข้อมูลสาธิตทั้งหมด: `delete from alarms where event_id like 'demo-seed-%' returning alarm_code;`
+- สร้างไฟล์ใหม่ (เช่น เปลี่ยนวันอ้างอิง): แก้ `TODAY` ใน `supabase/seed/gen_demo_alarm_history.py` แล้วรัน `python supabase/seed/gen_demo_alarm_history.py`
 
 ---
 
@@ -257,3 +265,4 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่ม Module งานซ่อมบำรุง (บอร์ด Kanban), migration 005, ปัญหาที่พบบ่อยของใบงานซ่อม |
 | 26 ก.ย. 2569 | เพิ่มหน้าภาพรวม (Dashboard), migration 006, library `recharts` + `react-is` (peer ของ recharts ล็อกเวอร์ชันให้ตรงกับ `react`) |
 | 26 ก.ย. 2569 | เพิ่มหน้าผู้ใช้งาน (เปลี่ยน Role), migration 007, วิธีแก้กรณีไม่มี admin / แก้ชื่อผู้ใช้ |
+| 26 ก.ย. 2569 | เพิ่มข้อ 2.7 ข้อมูลสาธิต Alarm ย้อนหลัง และวิธีลบ |
