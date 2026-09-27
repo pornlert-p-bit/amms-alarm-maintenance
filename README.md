@@ -7,6 +7,7 @@
 
 | | |
 |---|---|
+| **ผู้จัดทำ** | นายพรเลิศ พลลาภ · รหัสนักศึกษา 056860405605-7 |
 | **Vercel URL** | https://amms-alarm-maintenance.vercel.app |
 | **GitHub** | https://github.com/pornlert-p-bit/amms-alarm-maintenance |
 | **Supabase Schema** | [`supabase/schema.sql`](supabase/schema.sql) (ติดตั้งใหม่ไฟล์เดียว) · [`supabase/migrations/`](supabase/migrations/) (ประวัติการแก้) |

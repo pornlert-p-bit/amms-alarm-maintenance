@@ -1,6 +1,6 @@
 # รายงานการใช้ AI ในการพัฒนา — AMMS
 
-**ผู้จัดทำ:** _(ชื่อ–สกุล / รหัสนักศึกษา)_
+**ผู้จัดทำ:** นายพรเลิศ พลลาภ · รหัสนักศึกษา 056860405605-7
 **รายวิชา:** การใช้คอมพิวเตอร์ควบคุมระบบการผลิตอัตโนมัติ (Programming in Automation Systems)
 **ระบบ:** Alarm & Maintenance Management System — https://amms-alarm-maintenance.vercel.app
 
