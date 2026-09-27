@@ -61,7 +61,8 @@ export async function simulateStatus(machineId: string, _prev: FormState, formDa
   });
 
   afterSimulate(machineId);
-  return { ok: true, data: null, message: `ส่งสัญญาณ ${to} แล้ว` };
+  const code = { Running: "RUN", Stop: "STOP", Maintenance: "MAINT" }[to];
+  return { ok: true, data: null, message: `ส่งสัญญาณ ${code} แล้ว` };
 }
 
 export async function simulateFault(machineId: string, _prev: FormState, formData: FormData): Promise<FormState> {
