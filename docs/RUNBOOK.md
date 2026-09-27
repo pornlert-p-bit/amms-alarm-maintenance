@@ -41,6 +41,7 @@ Browser ──► Vercel (Next.js 16) ──► Supabase (PostgreSQL + Auth)
 | `features/alarm/` | Module Alarm: กฎลำดับสถานะ (`rules.ts`), บันทึก/รับงาน/ปิด/แก้รายละเอียด (`actions.ts`) |
 | `features/maintenance/` | Module งานซ่อมบำรุง: กฎลำดับสถานะ (`rules.ts`), อ่านข้อมูลบอร์ด (`queries.ts`), เปิด/เปลี่ยนสถานะ/แก้ใบงาน (`actions.ts`), `components/` (ฟอร์ม, การ์ดบนบอร์ด, ปุ่มสถานะ) |
 | `features/dashboard/` | หน้าภาพรวม: อ่านข้อมูล (`queries.ts`), ตัวคำนวณ MTTR/Pareto/กราฟรายวัน (`metrics.ts` มี unit test), `components/` (แถบ Alarm `alarm-banner.tsx`, ผังสายการผลิต `production-line.tsx`, กราฟ recharts, ช่องตัวเลข `kpi-tile.tsx` ที่หน้าประวัติเครื่องใช้) |
+| `features/simulator/` | หน้าจำลองสัญญาณ PLC (`/simulator`, Admin): รายการ Fault ตามประเภทเครื่อง (`faults.ts`), ส่งสัญญาณผ่านฟังก์ชันในฐานข้อมูล (`actions.ts`) |
 | `features/users/` | หน้าผู้ใช้งาน: กฎเปลี่ยน Role (`rules.ts`), รายชื่อ (`queries.ts`), เปลี่ยน Role + Audit Log (`actions.ts`) |
 | `features/staff/queries.ts` | อ่านรายชื่อผู้ใช้จาก view `staff_directory` (ชื่อผู้บันทึก/ผู้ปิด, เลือกช่าง) |
 | `supabase/seed/` | ข้อมูลสาธิต (Alarm ย้อนหลัง) + สคริปต์สร้าง — ดูข้อ 2.7 |
@@ -116,6 +117,7 @@ npm run dev     # เปิด http://localhost:3000
 | `006_dashboard_views.sql` | view นับ Alarm ต่อวัน/ต่อรหัส และเวลาซ่อม (ใช้กับกราฟและ MTTR) | ✅ 26 ก.ย. 2569 |
 | `007_profiles_column_grants.sql` | ให้แก้ตาราง profiles ได้เฉพาะคอลัมน์ `role` (ปิดการแก้ชื่อ/วันที่/id ผ่าน API) | ✅ 26 ก.ย. 2569 |
 | `008_audit_integrity.sql` | Audit Log ปลอม Role/เวลาไม่ได้ และแก้/ลบไม่ได้ (append-only) | ✅ 26 ก.ย. 2569 |
+| `009_plc_simulator.sql` | ฟังก์ชันจำลองสัญญาณ PLC + ประวัติสถานะรู้แหล่งที่มา (manual / simulator) | ✅ 27 ก.ย. 2569 |
 
 กติกา: **ห้ามแก้ไฟล์ migration ที่รันไปแล้ว** — ถ้าต้องเปลี่ยนให้สร้างไฟล์เลขถัดไป และเพิ่มเนื้อหาเดียวกันต่อท้าย `schema.sql` ทุกครั้ง หลังรันให้ตรวจตามข้อ 4.2
 
@@ -176,6 +178,8 @@ npm run dev     # เปิด http://localhost:3000
 | ต้องการ**ลบ Audit Log** | — | ระบบตั้งใจไม่ให้ลบผ่านเว็บ/API (หลักฐานต้องไม่หาย) — ถ้าจำเป็นจริง (เช่น ล้างข้อมูลทดสอบ) ผู้ดูแลลบใน SQL Editor แล้วบันทึกเหตุผล |
 | หน้าประวัติเครื่อง**ไม่มีเหตุการณ์ "สถานะ …"** ทั้งที่เครื่องมีสถานะ MAINT/STOP | SQL: `select * from machine_status_history where machine_id = '<id>';` | ถูกต้อง — ประวัติบันทึกเฉพาะตอน**เปลี่ยน**สถานะ (trigger `trg_machines_status_history`) สถานะที่ตั้งตอนเพิ่มเครื่องจะไม่มีประวัติ |
 | หน้าเว็บบนมือถือ**เลื่อนซ้ายขวาได้ทั้งหน้า** | DevTools → หาองค์ประกอบที่กว้างเกินจอ | มักเป็นตารางที่ไม่ได้ใช้ `tableClass.wrap` (ต้องมี `relative overflow-x-auto`) หรือปุ่มหัวหน้าเพจที่ไม่ได้ใช้ `PageHeader` |
+| หน้าจำลอง PLC ขึ้น **"ยังไม่ได้รัน migration 009"** | — | รัน `supabase/migrations/009_plc_simulator.sql` ใน SQL Editor |
+| ต้องการ**ล้าง Alarm ที่เกิดจากการจำลอง** | SQL: `select alarm_code, status from alarms where event_id like 'sim-%';` | ปิดผ่านหน้าเว็บตามปกติ (ใส่สาเหตุว่าเป็นการทดสอบ) หรือผู้ดูแลลบใน SQL Editor: `delete from alarms where event_id like 'sim-%' returning alarm_code;` |
 | Supabase Project ถูก **Pause** (แผน Free หยุดเองเมื่อไม่มีการใช้งานนาน) | Supabase Dashboard | กด **Restore project** รอประมาณ 1–2 นาที |
 
 ### 4.1 เติมโปรไฟล์ให้บัญชีที่ไม่มีโปรไฟล์
@@ -253,6 +257,7 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | `lib/auth/roles.ts` → `safeNextPath` | กัน Open Redirect | ปฏิเสธ URL ภายนอกทุกรูปแบบ |
 | `supabase/migrations/002_staff_directory.sql` | view ข้าม RLS ของ profiles โดยตั้งใจ | เลือกแค่ id, full_name, role / ไม่ให้ anon |
 | `supabase/migrations/003–004` | trigger คุมความถูกต้องของ Alarm | ครอบคลุมทั้ง INSERT และ UPDATE / ผู้บันทึก-ผู้ปิดมาจาก `auth.uid()` |
+| `supabase/migrations/009`, `features/simulator/` | จำลองสัญญาณเครื่องและสร้าง Alarm | ฟังก์ชันตรวจ admin ซ้ำ (เพราะ UPDATE ที่ RLS กรองไม่ error เอง), แหล่งที่มาตั้งตายตัวเป็น `simulator` |
 | `supabase/migrations/008`, `features/audit/` | ความน่าเชื่อถือของหลักฐาน | trigger เขียนทับ Role/เวลาทุกครั้งที่มี token, ไม่มีสิทธิ์ UPDATE/DELETE, หน้า `/audit` เรียก `requireAdmin()` |
 | `features/users/actions.ts`, `supabase/migrations/007` | เปลี่ยนสิทธิ์ของผู้ใช้ | เรียก `authorizeAction(isAdmin)` ก่อนทุกอย่าง, ห้ามแก้ตัวเอง, สิทธิ์คอลัมน์เหลือแค่ `role`, มี Audit Log ทุกครั้ง |
 | `supabase/migrations/005` | trigger คุมความถูกต้องของใบงานซ่อม | ลำดับสถานะตรงกับ `features/maintenance/rules.ts`, ตรวจช่างผ่าน `staff_directory`, ผู้เปิดมาจาก `auth.uid()` |
@@ -274,5 +279,6 @@ drop trigger if exists trg_mnt_enforce_update on public.maintenance_records;
 | 26 ก.ย. 2569 | เพิ่มหน้าผู้ใช้งาน (เปลี่ยน Role), migration 007, วิธีแก้กรณีไม่มี admin / แก้ชื่อผู้ใช้ |
 | 26 ก.ย. 2569 | เพิ่มข้อ 2.7 ข้อมูลสาธิต Alarm ย้อนหลัง และวิธีลบ |
 | 26 ก.ย. 2569 | เพิ่มหน้า Audit Log (`/audit`), migration 008, ADR-005 Revision 2 |
+| 27 ก.ย. 2569 | เพิ่มหน้าจำลอง PLC (`/simulator`), migration 009, ADR-004 Revision |
 | 26 ก.ย. 2569 | เพิ่มหน้าประวัติเครื่อง (`/machines/[id]`), `PageHeader` ใช้ร่วมกัน, แก้หน้ากว้างเกินจอบนมือถือ |
 | 26 ก.ย. 2569 | จัดหน้าภาพรวมใหม่แบบจอ SCADA (ADR-007 Revision) |

@@ -12,6 +12,8 @@ export const ALARM_PAGE_SIZE = 25;
 export type Alarm = {
   id: string;
   alarm_code: string;
+  /** ขึ้นต้น sim- = เกิดจาก PLC Simulator (migration 009) */
+  event_id: string | null;
   description: string;
   cause: string | null;
   occurred_at: string;
@@ -25,7 +27,7 @@ export type Alarm = {
 
 // machine:machines(...) = ดึงข้อมูลเครื่องมาด้วยในคำสั่งเดียวผ่าน Foreign Key (ไม่ต้อง query แยก)
 const ALARM_COLUMNS =
-  "id, alarm_code, description, cause, occurred_at, status, created_by, closed_by, closed_at, updated_at, " +
+  "id, alarm_code, event_id, description, cause, occurred_at, status, created_by, closed_by, closed_at, updated_at, " +
   "machine:machines(id, machine_id, machine_name, deleted_at)";
 
 export async function getAlarms(params: {

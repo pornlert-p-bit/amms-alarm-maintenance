@@ -10,6 +10,7 @@ import { ALARM_STATUS_LABEL } from "@/features/alarm/rules";
 import { ALARM_STATUSES, type AlarmStatus } from "@/features/alarm/schema";
 import { getMachineOptions, isUuid } from "@/features/machine/queries";
 import { parsePage, sanitizeSearch } from "@/features/machine/rules";
+import { isSimulatedAlarm } from "@/features/simulator/faults";
 import { requireUser } from "@/lib/auth/dal";
 import { isStaff } from "@/lib/auth/roles";
 import { bangkokDayRange, formatDateTime } from "@/lib/format";
@@ -136,7 +137,7 @@ export default async function AlarmsPage({ searchParams }: Props) {
                         <span className={`${tableClass.mono} font-semibold`}>{a.machine?.machine_id ?? "—"}</span>
                         {a.machine?.deleted_at && <span className="ml-1 text-xs text-muted">(ลบแล้ว)</span>}
                       </td>
-                      <td className={`${tableClass.td} ${tableClass.mono} font-semibold`}>{a.alarm_code}</td>
+                      <td className={`${tableClass.td} ${tableClass.mono} font-semibold whitespace-nowrap`}>{a.alarm_code}{isSimulatedAlarm(a.event_id) && <span className="ml-1.5 rounded-[3px] border border-line-strong px-1 py-px font-sans text-[10.5px] font-normal text-muted">จำลอง</span>}</td>
                       <td className={`${tableClass.td} max-w-[360px] truncate`} title={a.description}>{a.description}</td>
                       <td className={tableClass.td}><AlarmStatusBadge status={a.status} /></td>
                       <td className={`${tableClass.td} text-right`}>
