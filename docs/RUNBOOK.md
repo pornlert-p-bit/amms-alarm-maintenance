@@ -156,6 +156,7 @@ npm run dev     # เปิด http://localhost:3000
 | Technician เปิด `/users` แล้วเจอ "ไม่มีสิทธิ์" | — | **ถูกต้องแล้ว** หน้านี้สำหรับ Admin เท่านั้น |
 | CI ขึ้น ❌ ที่ขั้น **Install dependencies** | GitHub → Actions → คลิก run ที่แดง | มักเกิดจาก `package-lock.json` ไม่ตรงกับ `package.json` → รัน `npm install` ในเครื่องแล้ว commit ไฟล์ lock ใหม่ (**อย่าแก้ด้วย `--legacy-peer-deps`**) |
 | CI ขึ้น ❌ ที่ขั้น **Build** แต่ในเครื่องผ่าน | log ของ Actions | มักเป็น error ของ TypeScript → รัน `npm run build` ในเครื่องแล้วอ่าน error |
+| CI ขึ้น ❌ ที่ขั้น **Build** ทั้งที่ commit นั้นแก้แค่เอกสาร และ Vercel build ผ่าน | หน้า run บน GitHub → ขั้น Build | น่าจะเป็นปัญหาชั่วคราวของเครื่อง CI (เคยเกิด 27 ก.ย. 2569 run #24) → กด **Re-run jobs → Re-run all jobs** ถ้ายังแดงค่อยอ่าน log |
 | เพิ่มเครื่องแล้วขึ้น **"รหัสเครื่องจักรนี้มีอยู่แล้ว"** แต่ไม่เห็นในรายการ | SQL Editor: `select machine_id, deleted_at from machines where machine_id = 'M-XXX';` | เครื่องนั้นเคยถูกลบ (Soft Delete) รหัสจึงยังถูกจองอยู่ — ถ้าต้องการกู้เครื่องคืน: `update machines set deleted_at = null where machine_id = 'M-XXX';` |
 | ใน log ของ Vercel มี **`writeAudit failed`** | ดู action / entity ในบรรทัดนั้น | ข้อมูลถูกบันทึกแล้วแต่ไม่มี Audit Log (ข้อจำกัดใน ADR-005 Revision) — บันทึกเหตุการณ์ไว้ และตรวจว่า RLS ของ `audit_logs` ยังถูกต้อง |
 | เวลาที่แสดงในหน้าเว็บ**ช้าไป 7 ชั่วโมง** | โค้ดที่แสดงเวลาจุดนั้น | ต้องแสดงผ่าน `formatDateTime()` ใน `lib/format.ts` เท่านั้น |
