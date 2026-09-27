@@ -10,6 +10,7 @@ import { AlarmActions } from "@/features/alarm/components/alarm-actions";
 import { getAlarmById } from "@/features/alarm/queries";
 import { nextAlarmStatuses } from "@/features/alarm/rules";
 import { getStaffDirectory, staffNameOf } from "@/features/staff/queries";
+import { isSimulatedAlarm } from "@/features/simulator/faults";
 import { requireUser } from "@/lib/auth/dal";
 import { isStaff } from "@/lib/auth/roles";
 import { formatDateTime } from "@/lib/format";
@@ -38,6 +39,7 @@ export default async function AlarmDetailPage({ params, searchParams }: Props) {
       {alarm.machine?.deleted_at && <span className="ml-1 text-xs text-muted">(ลบแล้ว)</span>}
     </>],
     ["รหัส Alarm", <span key="c" className="font-mono font-semibold">{alarm.alarm_code}</span>],
+    ["ที่มา", isSimulatedAlarm(alarm.event_id) ? "จำลองจาก PLC Simulator (ไม่ใช่เครื่องจริง)" : alarm.event_id?.startsWith("demo-seed-") ? "ข้อมูลสาธิตย้อนหลัง (RUNBOOK ข้อ 2.7)" : "บันทึกโดยผู้ใช้"],
     ["รายละเอียด", alarm.description],
     ["เวลาเกิด", <span key="t" className="font-mono">{formatDateTime(alarm.occurred_at)}</span>],
     ["ผู้บันทึก", staffNameOf(staffList, alarm.created_by)],

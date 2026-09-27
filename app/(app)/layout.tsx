@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ShiftClock } from "@/components/station/shift-clock";
 import { StatusPill } from "@/components/station/status-pill";
 import { TopNav } from "@/components/station/top-nav";
@@ -58,8 +60,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-2.5 md:px-5">
         {/* ถ้าอ่านโปรไฟล์จากฐานข้อมูลได้ แปลว่าเชื่อมต่อฐานข้อมูลได้จริง — ไม่ใช่ป้ายตกแต่ง */}
         <StatusPill label="ฐานข้อมูล" value={user ? "ONLINE" : "OFFLINE"} tone={user ? "ok" : "bad"} />
-        {/* v1 ยังไม่เชื่อม PLC จริง (ADR-004) — แสดงตามจริงด้วยสีเทา */}
-        <StatusPill label="PLC" value="SIMULATOR" tone="neutral" />
+        {/* v1 ยังไม่เชื่อม PLC จริง ใช้หน้า /simulator แทน (ADR-004) — แสดงตามจริงด้วยสีเทา; Admin กดเข้าหน้าจำลองได้ */}
+        {user?.role === "admin" ? (
+          <Link href="/simulator" title="ยังไม่เชื่อมต่อ PLC จริง — เปิดหน้าจำลองสัญญาณ" className="rounded-[3px] hover:opacity-80">
+            <StatusPill label="PLC" value="SIMULATOR" tone="neutral" />
+          </Link>
+        ) : (
+          <span title="ยังไม่เชื่อมต่อ PLC จริง — สัญญาณมาจากหน้าจำลองของผู้ดูแลระบบ">
+            <StatusPill label="PLC" value="SIMULATOR" tone="neutral" />
+          </span>
+        )}
         {user && <StatusPill label="สิทธิ์" value={ROLE_CODE[user.role]} tone="neutral" />}
         <ShiftClock />
       </div>

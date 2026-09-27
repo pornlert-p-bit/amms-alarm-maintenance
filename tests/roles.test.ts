@@ -47,6 +47,12 @@ describe("Route access (REQ-SEC-02 / TC-SEC-02)", () => {
     expect(canAccessPath("viewer", "/users-guide")).toBe(true);
   });
 
+  it("หน้า /simulator เข้าได้เฉพาะ Admin (ADR-004)", () => {
+    expect(canAccessPath("admin", "/simulator")).toBe(true);
+    expect(canAccessPath("technician", "/simulator")).toBe(false);
+    expect(canAccessPath("viewer", "/simulator")).toBe(false);
+  });
+
   it("หน้า /audit เข้าได้เฉพาะ Admin (REQ-BON-05)", () => {
     expect(canAccessPath("admin", "/audit")).toBe(true);
     expect(canAccessPath("technician", "/audit")).toBe(false);
@@ -72,6 +78,9 @@ describe("Route access (REQ-SEC-02 / TC-SEC-02)", () => {
     expect(hrefs("viewer")).not.toContain("/users");
     expect(hrefs("admin")).toContain("/audit");
     expect(hrefs("technician")).not.toContain("/audit");
+    expect(hrefs("admin")).toContain("/simulator");
+    expect(hrefs("technician")).not.toContain("/simulator");
+    expect(hrefs("viewer")).not.toContain("/simulator");
     expect(hrefs("viewer")).toContain("/dashboard");
   });
 });
