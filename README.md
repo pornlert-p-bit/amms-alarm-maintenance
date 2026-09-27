@@ -142,7 +142,7 @@ npm run dev                       # เปิด http://localhost:3000
 | AI ช่วยทำ | ผู้พัฒนาตัดสินใจ / ทำเอง |
 |---|---|
 | ร่างเอกสารออกแบบ 6 ไฟล์ และ ADR 7 ฉบับ | ขอบเขตงาน และตรวจเอกสารก่อนเริ่มเขียนโค้ด |
-| เขียนโค้ดทุก Module, SQL, migration และ unit test | เลือกแนวหน้าจอ (Station terminal จากโปรเจกต์ One Card ของตนเอง และหน้าภาพรวมแบบ SCADA) |
+| เขียนโค้ดทุก Module, SQL, migration และ unit test | เลือกแนวหน้าจอ (Station terminal ตามหลัก ISA-101 และหน้าภาพรวมแบบจอ SCADA) |
 | ทดสอบในเบราว์เซอร์และยิง API ตรงหาช่องโหว่ | อนุมัติ library ใหม่ทุกตัว, รัน migration ใน Supabase, สร้างบัญชี/ถือรหัสผ่าน, Login ทุก Role เพื่อทดสอบ |
 | เขียนรายงานทดสอบและ RUNBOOK | ตั้งค่า GitHub, Vercel, Supabase และอนุญาตทุกครั้งก่อน push / แตะฐานข้อมูลจริง |
 
