@@ -46,6 +46,7 @@ AMMS รวม **เครื่องจักร → Alarm → งานซ่
 | สถานะ Waiting Part | บอร์ดงานซ่อม |
 | Filter ตามช่วงวันที่ | Alarm, งานซ่อม, Audit Log, ประวัติเครื่อง |
 | Responsive UI | ใช้บนมือถือได้ทุกหน้า (ทดสอบที่ความกว้าง 375px) |
+| PLC Simulator | `/simulator` (Admin) จำลองสัญญาณ RUN / STOP / MAINT และ Fault → เกิด Alarm อัตโนมัติ ผ่านฟังก์ชันในฐานข้อมูลเส้นทางเดียวกับ PLC Gateway (ยังไม่ต่อ PLC จริง — [ADR-004](docs/adr/ADR-004-plc-integration-boundary.md)) |
 
 ## 3. เทคโนโลยี
 
@@ -55,7 +56,7 @@ AMMS รวม **เครื่องจักร → Alarm → งานซ่
 | UI | Tailwind CSS 4, กราฟด้วย Recharts · ออกแบบตามหลัก ISA-101 (สถานะปกติเป็นสีเทา ใช้สีเฉพาะสิ่งผิดปกติ) |
 | ฐานข้อมูล + Login | Supabase (PostgreSQL, Auth, Row Level Security) |
 | Validation | Zod |
-| Test | Vitest (unit test 129 กรณี) |
+| Test | Vitest (unit test 144 กรณี) |
 | CI | GitHub Actions — Install → Build → Lint → Test ทุกครั้งที่ push |
 | Deploy | Vercel (deploy อัตโนมัติจาก branch `main`) |
 

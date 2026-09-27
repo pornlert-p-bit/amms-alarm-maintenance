@@ -74,7 +74,7 @@
 | REQ-BON-06 | 03 §3.2 | — | `ThemeToggle.tsx`, Tailwind breakpoints | TC-BON-06 | รอ implement |
 | REQ-BON-07 | 02 §4 | enum `mnt_status` = `Waiting Part` | `maintenance/rules.ts` | TC-BON-07 | รอ implement |
 | REQ-BON-08 | 03 §3.2 | `idx_alarms_occurred`, `idx_mnt_date` | `DateRangeFilter.tsx` | TC-BON-08 | ✅ ผ่าน (Alarm A11 + งานซ่อม W11 + ประวัติเครื่อง H6 + Audit Log L7) |
-| REQ-BON-09 | ADR-004 | `alarms.event_id`, `machines.last_seen_at`, `status_source` | `features/integration/*`, `api/plc/status` | TC-BON-09 | รอ implement |
+| REQ-BON-09 | ADR-004 | `alarms.event_id`, `machines.last_seen_at`, `status_source` | `features/simulator/*` + ฟังก์ชัน `simulate_machine_*` (migration 009) | TC-BON-09 | 🟡 Simulator ผ่าน (S1–S6, A1–A6, T1–T3) [รายงาน Simulator](test-reports/2026-09-27-simulator.md) — PLC Gateway จริงยังไม่ทำ (ADR-004 Revision) |
 
 ## 3. Non-functional Requirements
 

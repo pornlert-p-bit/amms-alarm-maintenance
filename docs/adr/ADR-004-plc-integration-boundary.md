@@ -60,3 +60,16 @@ Body:    { event_id, machine_id, status, occurred_at, alarm_code?, description? 
 - Simulator อาจทำให้เข้าใจผิดว่าระบบเชื่อม PLC จริงแล้ว → ต้องระบุชัดใน README และบนหน้า `/simulator` ว่าเป็น Mock
 
 **หมายเหตุ:** สิ่งที่ยังต้องอยู่ใน PLC/Safety Controller ไม่ใช่ Web Application คือ Control Loop และ Safety Interlock ซึ่งต้อง deterministic และต้องไม่พึ่ง internet
+
+## Revision — 27 กันยายน 2569 (สร้าง Simulator จริง)
+
+**สิ่งที่พบ:** ป้าย "PLC | SIMULATOR" บนแถบด้านบนมีตั้งแต่ทำธีมหน้าจอ แต่หน้า `/simulator` ตาม Decision ข้อ 2 **ไม่เคยถูกสร้าง** — ป้ายจึงบอกเกินความจริง (ผู้พัฒนาถามถึงป้ายนี้ จึงตรวจเจอ)
+
+**สิ่งที่ทำ (ต่างจากแบบเดิมเล็กน้อย):**
+- ไม่ได้ทำ `simulator.ts` ฝั่งแอปที่แก้ตารางเอง แต่ใช้**ฟังก์ชันในฐานข้อมูล** `simulate_machine_status` และ `simulate_machine_fault` (migration 009) — Fault จึงทำ 2 อย่างใน transaction เดียว (เครื่องเป็น Alarm + เกิด Alarm Record) และเป็นจุดเดียวกับที่ PLC Gateway จะเรียกใน v2
+- ประวัติสถานะแยกแหล่งที่มาได้จริง: trigger อ่านค่าที่ฟังก์ชันตั้งไว้ใน transaction (`simulator`) ไม่มีค่า = `manual`
+- Alarm จำลองติด `event_id` ขึ้นต้น `sim-` และมีป้าย "จำลอง" บนหน้าเว็บ + หน้า `/simulator` มีแถบแจ้งว่า "ยังไม่ได้เชื่อมต่อ PLC จริง" (ตามข้อระวังใน Consequences)
+
+**ยังไม่ได้ทำ:** PLC Gateway จริง, `/api/plc/status`, การอัปเดต `last_seen_at`
+
+ผลทดสอบ: `docs/test-reports/2026-09-27-simulator.md`
