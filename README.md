@@ -133,7 +133,21 @@ npm run dev                       # เปิด http://localhost:3000
 
 ## 7. ภาพหน้าจอ
 
-> _(จะเพิ่มภาพจาก production ในโฟลเดอร์ `docs/screenshots/`)_
+ถ่ายจากระบบจริงบน Vercel (บัญชี Admin) วันที่ 27 ก.ย. 2569 · คลิกภาพเพื่อดูขนาดเต็ม
+
+| # | หน้าจอ | ภาพ |
+|---|---|---|
+| 1 | หน้าจอควบคุมการผลิต — แถบ Alarm, แถบสถานะรวม และผังสายการผลิต | [![หน้าจอควบคุมการผลิต — แถบ Alarm, แถบสถานะรวม และผังสายการผลิต](docs/screenshots/01-dashboard.png)](docs/screenshots/01-dashboard.png) |
+| 2 | กราฟ Alarm ต่อวัน (30 วัน), Pareto รหัส Alarm และบันทึกเหตุการณ์ล่าสุด | [![กราฟ Alarm ต่อวัน (30 วัน), Pareto รหัส Alarm และบันทึกเหตุการณ์ล่าสุด](docs/screenshots/02-dashboard-charts.png)](docs/screenshots/02-dashboard-charts.png) |
+| 3 | รายการเครื่องจักร (Admin: เพิ่ม / แก้ไข / ลบ) | [![รายการเครื่องจักร (Admin: เพิ่ม / แก้ไข / ลบ)](docs/screenshots/03-machines.png)](docs/screenshots/03-machines.png) |
+| 4 | แก้ไขเครื่องจักร — ช่องบังคับและคำอธิบายรูปแบบข้อมูล | [![แก้ไขเครื่องจักร — ช่องบังคับและคำอธิบายรูปแบบข้อมูล](docs/screenshots/04-machine-edit.png)](docs/screenshots/04-machine-edit.png) |
+| 5 | ประวัติเครื่อง M-003 — สรุปช่วง 30 วัน และไทม์ไลน์ Alarm / งานซ่อม | [![ประวัติเครื่อง M-003 — สรุปช่วง 30 วัน และไทม์ไลน์ Alarm / งานซ่อม](docs/screenshots/05-machine-history.png)](docs/screenshots/05-machine-history.png) |
+| 6 | รายการ Alarm พร้อมตัวกรอง เครื่อง / สถานะ / รหัส / ช่วงวันที่ | [![รายการ Alarm พร้อมตัวกรอง เครื่อง / สถานะ / รหัส / ช่วงวันที่](docs/screenshots/06-alarms.png)](docs/screenshots/06-alarms.png) |
+| 7 | รายละเอียด Alarm — รับงาน, เปิดใบงานซ่อม, ปิดต้องระบุสาเหตุ | [![รายละเอียด Alarm — รับงาน, เปิดใบงานซ่อม, ปิดต้องระบุสาเหตุ](docs/screenshots/07-alarm-detail.png)](docs/screenshots/07-alarm-detail.png) |
+| 8 | บอร์ดงานซ่อม 4 คอลัมน์ รวมสถานะ Waiting Part | [![บอร์ดงานซ่อม 4 คอลัมน์ รวมสถานะ Waiting Part](docs/screenshots/08-maintenance-board.png)](docs/screenshots/08-maintenance-board.png) |
+| 9 | จัดการผู้ใช้ — Admin เปลี่ยน Role คนอื่นได้ แต่ของตัวเองไม่ได้ | [![จัดการผู้ใช้ — Admin เปลี่ยน Role คนอื่นได้ แต่ของตัวเองไม่ได้](docs/screenshots/09-users.png)](docs/screenshots/09-users.png) |
+| 10 | Audit Log — ใคร ทำอะไร เมื่อไร และค่าก่อน → หลัง | [![Audit Log — ใคร ทำอะไร เมื่อไร และค่าก่อน → หลัง](docs/screenshots/10-audit-log.png)](docs/screenshots/10-audit-log.png) |
+| 11 | GitHub Actions — CI ผ่านทุกครั้งที่ push | [![GitHub Actions — CI ผ่านทุกครั้งที่ push](docs/screenshots/11-github-actions.png)](docs/screenshots/11-github-actions.png) |
 
 ## 8. การใช้ AI ในการพัฒนา
 
